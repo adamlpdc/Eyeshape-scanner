@@ -1,6 +1,5 @@
-import { syncCanvasToVideo } from "./syncCanvasToVideo";
+import { syncCanvasToVideo } from "./sync-canvas-to-video";
 
-/** Keep canvas bitmap dimensions tied to the video frame across resize/rotation. */
 export function observeVideoCanvasSync(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,

@@ -4,7 +4,6 @@ import {
   type NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
 
-/** Draw only left/right eye outlines. */
 export function drawEyes(
   drawingUtils: DrawingUtils,
   landmarks: NormalizedLandmark[],

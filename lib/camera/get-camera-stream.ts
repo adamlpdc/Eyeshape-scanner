@@ -1,4 +1,3 @@
-/** Prefer front camera on mobile; fall back so desktop webcams still work. */
 export async function getCameraStream(): Promise<MediaStream> {
   const constraints: MediaStreamConstraints = {
     audio: false,

@@ -1,4 +1,4 @@
-import CameraScanner from "./components/CameraScanner";
+import CameraScanner from "@/components/scanner/CameraScanner";
 
 export default function Home() {
   return <CameraScanner />;

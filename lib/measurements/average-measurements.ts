@@ -1,4 +1,4 @@
-import type { EyeMeasurements, FaceEyeMeasurements } from "./eyeMeasurements";
+import type { EyeMeasurements, FaceEyeMeasurements } from "@/types/eye";
 
 function averageMetric(values: number[]): number {
   if (values.length === 0) {

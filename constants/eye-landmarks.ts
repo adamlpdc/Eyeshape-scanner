@@ -1,6 +1,5 @@
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
-
-export type EyeSide = "left" | "right";
+import type { EyeSide } from "@/types/eye";
 
 /** Subject's left/right eye — matches MediaPipe FaceLandmarker naming. */
 export const EYE_LANDMARK_CONFIG = {
@@ -25,15 +24,16 @@ export const EYE_LANDMARK_CONFIG = {
     browCenter: 52,
     irisIndices: [469, 470, 471, 472] as const,
   },
-} as const;
-
-export function getConnectionIndices(
-  connections: { start: number; end: number }[],
-): number[] {
-  const indices = new Set<number>();
-  for (const { start, end } of connections) {
-    indices.add(start);
-    indices.add(end);
+} as const satisfies Record<
+  EyeSide,
+  {
+    connections: { start: number; end: number }[];
+    earIndices: readonly number[];
+    outerCorner: number;
+    innerCorner: number;
+    upperLid: number;
+    lowerLid: number;
+    browCenter: number;
+    irisIndices: readonly number[];
   }
-  return [...indices].sort((a, b) => a - b);
-}
+>;

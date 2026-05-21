@@ -1,4 +1,3 @@
-/** Match canvas bitmap size to the video frame so landmark coords line up with object-cover. */
 export function syncCanvasToVideo(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,

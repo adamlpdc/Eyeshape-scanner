@@ -1,51 +1,8 @@
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
-import {
-  EYE_LANDMARK_CONFIG,
-  type EyeSide,
-} from "./eyeLandmarks";
+import { EYE_LANDMARK_CONFIG } from "@/constants/eye-landmarks";
+import type { EyeMeasurements, EyeSide, FaceEyeMeasurements } from "@/types/eye";
+import { clamp, distance, toPixel, type Point2D } from "./geometry";
 
-export interface EyeMeasurements {
-  side: EyeSide;
-  width: number;
-  height: number;
-  aspectRatio: number;
-  outerCornerAngleDeg: number;
-  /** Vertical opening relative to eye width (height / width). */
-  upperEyelidOpenness: number;
-  /** Brow-to-upper-lid distance relative to eye width. */
-  browDistance: number;
-  /** Iris diameter relative to eye width. */
-  irisVisibility: number;
-  /** Positive ≈ upturned outer corner; negative ≈ downturned. */
-  canthalTilt: number;
-  confidence: number;
-}
-
-interface Point2D {
-  x: number;
-  y: number;
-}
-
-function toPixel(
-  landmark: NormalizedLandmark,
-  frameWidth: number,
-  frameHeight: number,
-): Point2D {
-  return {
-    x: landmark.x * frameWidth,
-    y: landmark.y * frameHeight,
-  };
-}
-
-function distance(a: Point2D, b: Point2D): number {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-/** Angle at the corner between upper-lid and lower-lid vectors (degrees). */
 function outerCornerAngleDeg(
   corner: Point2D,
   upper: Point2D,
@@ -158,11 +115,6 @@ export function measureEye(
       config.browCenter,
     ]),
   };
-}
-
-export interface FaceEyeMeasurements {
-  left: EyeMeasurements;
-  right: EyeMeasurements;
 }
 
 export function measureBothEyes(

@@ -1,52 +1,9 @@
+import type { EyeShapeClassificationConfig } from "@/types/classification";
+
 /**
  * Edit thresholds, ideals, and weights here to tune classification.
  * All feature values use the averaged left/right eye metrics from a scan.
  */
-
-export const EYE_SHAPES = [
-  "hooded",
-  "almond",
-  "round",
-  "monolid",
-  "upturned",
-  "downturned",
-] as const;
-
-export type EyeShape = (typeof EYE_SHAPES)[number];
-
-export type ClassificationFeature =
-  | "aspectRatio"
-  | "outerCornerAngleDeg"
-  | "upperEyelidOpenness"
-  | "browDistance"
-  | "irisVisibility"
-  | "canthalTilt";
-
-export interface FeatureTarget {
-  /** Preferred value for this shape. */
-  ideal: number;
-  /** Allowed deviation from ideal before score drops to 0. */
-  tolerance: number;
-  /** Relative importance of this feature for the shape (multiplier). */
-  weight: number;
-}
-
-export type ShapeFeatureTargets = Record<ClassificationFeature, FeatureTarget>;
-
-export interface EyeShapeClassificationConfig {
-  /** Global multiplier per feature across all shapes. */
-  featureWeights: Record<ClassificationFeature, number>;
-  /** Per-shape ideal ranges and feature emphasis. */
-  shapes: Record<EyeShape, ShapeFeatureTargets>;
-  /** Confidence and result tuning. */
-  result: {
-    /** Minimum normalized score (0–1) to accept a primary match. */
-    minPrimaryScore: number;
-    /** Minimum gap between 1st and 2nd place to show a distinct secondary. */
-    minSecondaryGap: number;
-  };
-}
-
 export const EYE_SHAPE_CLASSIFICATION_CONFIG: EyeShapeClassificationConfig = {
   featureWeights: {
     aspectRatio: 1.2,

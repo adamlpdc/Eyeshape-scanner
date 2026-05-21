@@ -1,27 +1,13 @@
-import type { EyeMeasurements, FaceEyeMeasurements } from "./eyeMeasurements";
+import { EYE_SHAPE_CLASSIFICATION_CONFIG } from "@/constants/eye-shape-config";
 import {
-  EYE_SHAPE_CLASSIFICATION_CONFIG,
   EYE_SHAPES,
   type ClassificationFeature,
   type EyeShape,
-} from "./eyeShapeConfig";
-
-export interface EyeShapeFeatures {
-  aspectRatio: number;
-  outerCornerAngleDeg: number;
-  upperEyelidOpenness: number;
-  browDistance: number;
-  irisVisibility: number;
-  canthalTilt: number;
-}
-
-export interface EyeShapeClassification {
-  primary: EyeShape;
-  confidence: number;
-  secondary: EyeShape | null;
-  scores: Record<EyeShape, number>;
-  features: EyeShapeFeatures;
-}
+  type EyeShapeClassification,
+  type EyeShapeFeatures,
+} from "@/types/classification";
+import type { FaceEyeMeasurements } from "@/types/eye";
+import { extractFeaturesFromMeasurements } from "./extract-features";
 
 const FEATURE_KEYS: ClassificationFeature[] = [
   "aspectRatio",
@@ -32,34 +18,6 @@ const FEATURE_KEYS: ClassificationFeature[] = [
   "canthalTilt",
 ];
 
-function averageEyeMetric(
-  left: number,
-  right: number,
-): number {
-  return (left + right) / 2;
-}
-
-export function featuresFromMeasurements(
-  measurements: FaceEyeMeasurements,
-): EyeShapeFeatures {
-  const { left, right } = measurements;
-
-  return {
-    aspectRatio: averageEyeMetric(left.aspectRatio, right.aspectRatio),
-    outerCornerAngleDeg: averageEyeMetric(
-      left.outerCornerAngleDeg,
-      right.outerCornerAngleDeg,
-    ),
-    upperEyelidOpenness: averageEyeMetric(
-      left.upperEyelidOpenness,
-      right.upperEyelidOpenness,
-    ),
-    browDistance: averageEyeMetric(left.browDistance, right.browDistance),
-    irisVisibility: averageEyeMetric(left.irisVisibility, right.irisVisibility),
-    canthalTilt: averageEyeMetric(left.canthalTilt, right.canthalTilt),
-  };
-}
-
 function scoreFeature(value: number, ideal: number, tolerance: number): number {
   if (tolerance <= 0) {
     return value === ideal ? 1 : 0;
@@ -68,10 +26,7 @@ function scoreFeature(value: number, ideal: number, tolerance: number): number {
   return Math.max(0, 1 - distance / tolerance);
 }
 
-function scoreShape(
-  shape: EyeShape,
-  features: EyeShapeFeatures,
-): number {
+function scoreShape(shape: EyeShape, features: EyeShapeFeatures): number {
   const { shapes, featureWeights } = EYE_SHAPE_CLASSIFICATION_CONFIG;
   const shapeConfig = shapes[shape];
 
@@ -95,16 +50,10 @@ function scoreShape(
   return weightTotal > 0 ? weightedSum / weightTotal : 0;
 }
 
-function formatShapeLabel(shape: EyeShape): string {
-  return shape.charAt(0).toUpperCase() + shape.slice(1);
-}
-
-export { formatShapeLabel };
-
 export function classifyEyeShape(
   measurements: FaceEyeMeasurements,
 ): EyeShapeClassification {
-  const features = featuresFromMeasurements(measurements);
+  const features = extractFeaturesFromMeasurements(measurements);
   const { result } = EYE_SHAPE_CLASSIFICATION_CONFIG;
 
   const scores = Object.fromEntries(

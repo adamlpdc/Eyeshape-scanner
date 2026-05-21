@@ -1,35 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import ScanProgressOverlay from "./ScanProgressOverlay";
-import ScanResultsScreen from "./ScanResultsScreen";
-import { averageFaceEyeMeasurements } from "../lib/averageEyeMeasurements";
-import {
-  classifyEyeShape,
-  type EyeShapeClassification,
-} from "../lib/classifyEyeShape";
-import { drawEyes } from "../lib/drawEyes";
-import { getCameraStream } from "../lib/getCameraStream";
+import { SCAN_DURATION_MS, SCAN_ERRORS, PROGRESS_UPDATE_MS } from "@/constants/scan";
+import { getCameraStream } from "@/lib/camera/get-camera-stream";
+import { classifyEyeShape } from "@/lib/classification/classify-eye-shape";
+import { averageFaceEyeMeasurements } from "@/lib/measurements/average-measurements";
+import { measureBothEyes } from "@/lib/measurements/measure-eye";
+import { drawEyes } from "@/lib/mediapipe/draw-eyes";
 import {
   getFaceLandmarker,
   releaseFaceLandmarker,
-} from "../lib/faceLandmarker";
-import {
-  measureBothEyes,
-  type FaceEyeMeasurements,
-} from "../lib/eyeMeasurements";
-import { observeVideoCanvasSync } from "../lib/observeVideoCanvasSync";
-import { syncCanvasToVideo } from "../lib/syncCanvasToVideo";
+} from "@/lib/mediapipe/face-landmarker";
+import { observeVideoCanvasSync } from "@/lib/mediapipe/observe-video-canvas-sync";
+import { syncCanvasToVideo } from "@/lib/mediapipe/sync-canvas-to-video";
+import type { EyeShapeClassification } from "@/types/classification";
+import type { FaceEyeMeasurements } from "@/types/eye";
+import type { ScanPhase } from "@/types/scan";
 
-const MEDIA_CLASS =
-  "absolute inset-0 h-full w-full -scale-x-100 object-cover";
-
-const SCAN_DURATION_MS = 3000;
-const PROGRESS_UPDATE_MS = 50;
-
-type ScanPhase = "idle" | "capturing" | "results";
-
-export default function CameraScanner() {
+export function useScanSession() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -109,7 +97,7 @@ export default function CameraScanner() {
 
       const samples = samplesRef.current;
       if (samples.length === 0) {
-        setError("No face detected during scan. Try better lighting and hold still.");
+        setError(SCAN_ERRORS.noFace);
         setPhase("idle");
         return;
       }
@@ -227,7 +215,7 @@ export default function CameraScanner() {
     runLandmarker().catch((err) => {
       if (!cancelled) {
         const message =
-          err instanceof Error ? err.message : "Face detection failed to start.";
+          err instanceof Error ? err.message : SCAN_ERRORS.landmarkerFailed;
         setError(message);
         resetScan();
       }
@@ -240,7 +228,7 @@ export default function CameraScanner() {
     };
   }, [phase, resetScan, stopCamera]);
 
-  async function startScan() {
+  const startScan = useCallback(async () => {
     setError(null);
     setIsModelReady(false);
     setCaptureProgress(0);
@@ -265,63 +253,24 @@ export default function CameraScanner() {
       setPhase("capturing");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not access the camera.";
+        err instanceof Error ? err.message : SCAN_ERRORS.cameraFailed;
       setError(message);
       setPhase("idle");
     }
-  }
+  }, []);
 
-  const showCamera = phase === "capturing";
-
-  return (
-    <div className="fixed inset-0 bg-black">
-      <div
-        className={`absolute inset-0 overflow-hidden ${showCamera ? "block" : "hidden"}`}
-      >
-        <video
-          ref={videoRef}
-          className={MEDIA_CLASS}
-          playsInline
-          muted
-          autoPlay
-        />
-        <canvas
-          ref={canvasRef}
-          className={`${MEDIA_CLASS} pointer-events-none`}
-          aria-hidden
-        />
-      </div>
-
-      {phase === "capturing" && (
-        <ScanProgressOverlay
-          progress={captureProgress}
-          isModelReady={isModelReady}
-        />
-      )}
-
-      {phase === "results" && averagedResults && classification && (
-        <ScanResultsScreen
-          measurements={averagedResults}
-          classification={classification}
-          frameCount={capturedFrameCount}
-          onScanAgain={resetScan}
-        />
-      )}
-
-      {phase === "idle" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
-          {error && (
-            <p className="max-w-sm text-center text-sm text-red-400">{error}</p>
-          )}
-          <button
-            type="button"
-            onClick={startScan}
-            className="min-h-14 min-w-[200px] rounded-full bg-white px-8 py-4 text-lg font-semibold text-black shadow-lg active:scale-[0.98]"
-          >
-            Start scan
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  return {
+    videoRef,
+    canvasRef,
+    phase,
+    isModelReady,
+    captureProgress,
+    averagedResults,
+    classification,
+    capturedFrameCount,
+    error,
+    showCamera: phase === "capturing",
+    startScan,
+    resetScan,
+  };
 }

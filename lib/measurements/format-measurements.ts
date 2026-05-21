@@ -1,4 +1,4 @@
-import type { EyeMeasurements } from "./eyeMeasurements";
+import type { EyeMeasurements } from "@/types/eye";
 
 export function formatEyeBlock(label: string, m: EyeMeasurements): string {
   return [

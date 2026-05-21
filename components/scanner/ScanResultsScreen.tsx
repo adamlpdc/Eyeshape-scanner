@@ -1,9 +1,7 @@
-import {
-  formatShapeLabel,
-  type EyeShapeClassification,
-} from "../lib/classifyEyeShape";
-import type { FaceEyeMeasurements } from "../lib/eyeMeasurements";
-import { formatEyeBlock } from "../lib/formatEyeMeasurements";
+import { formatShapeLabel } from "@/lib/classification/format-shape-label";
+import { formatEyeBlock } from "@/lib/measurements/format-measurements";
+import type { EyeShape, EyeShapeClassification } from "@/types/classification";
+import type { FaceEyeMeasurements } from "@/types/eye";
 
 interface ScanResultsScreenProps {
   measurements: FaceEyeMeasurements;
@@ -82,7 +80,7 @@ export default function ScanResultsScreen({
               .sort(([, a], [, b]) => b - a)
               .map(
                 ([shape, score]) =>
-                  `  ${formatShapeLabel(shape as keyof typeof classification.scores)}: ${(score * 100).toFixed(0)}%`,
+                  `  ${formatShapeLabel(shape as EyeShape)}: ${(score * 100).toFixed(0)}%`,
               )
               .join("\n")}
           </pre>

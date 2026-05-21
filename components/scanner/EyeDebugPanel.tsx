@@ -1,5 +1,5 @@
-import type { FaceEyeMeasurements } from "../lib/eyeMeasurements";
-import { formatEyeBlock } from "../lib/formatEyeMeasurements";
+import { formatEyeBlock } from "@/lib/measurements/format-measurements";
+import type { FaceEyeMeasurements } from "@/types/eye";
 
 interface EyeDebugPanelProps {
   measurements: FaceEyeMeasurements | null;
