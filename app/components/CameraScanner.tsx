@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import EyeDebugPanel from "./EyeDebugPanel";
+import ScanProgressOverlay from "./ScanProgressOverlay";
+import ScanResultsScreen from "./ScanResultsScreen";
+import { averageFaceEyeMeasurements } from "../lib/averageEyeMeasurements";
+import {
+  classifyEyeShape,
+  type EyeShapeClassification,
+} from "../lib/classifyEyeShape";
 import { drawEyes } from "../lib/drawEyes";
 import { getCameraStream } from "../lib/getCameraStream";
 import {
@@ -18,16 +24,27 @@ import { syncCanvasToVideo } from "../lib/syncCanvasToVideo";
 const MEDIA_CLASS =
   "absolute inset-0 h-full w-full -scale-x-100 object-cover";
 
-const DEBUG_UPDATE_MS = 200;
+const SCAN_DURATION_MS = 3000;
+const PROGRESS_UPDATE_MS = 50;
+
+type ScanPhase = "idle" | "capturing" | "results";
 
 export default function CameraScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
+  const samplesRef = useRef<FaceEyeMeasurements[]>([]);
+  const captureStartRef = useRef<number | null>(null);
+  const isModelReadyRef = useRef(false);
+
+  const [phase, setPhase] = useState<ScanPhase>("idle");
   const [isModelReady, setIsModelReady] = useState(false);
-  const [eyeMeasurements, setEyeMeasurements] =
+  const [captureProgress, setCaptureProgress] = useState(0);
+  const [averagedResults, setAveragedResults] =
     useState<FaceEyeMeasurements | null>(null);
+  const [classification, setClassification] =
+    useState<EyeShapeClassification | null>(null);
+  const [capturedFrameCount, setCapturedFrameCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
@@ -38,29 +55,71 @@ export default function CameraScanner() {
     }
   }, []);
 
+  const resetScan = useCallback(() => {
+    stopCamera();
+    releaseFaceLandmarker();
+    samplesRef.current = [];
+    captureStartRef.current = null;
+    isModelReadyRef.current = false;
+    setPhase("idle");
+    setIsModelReady(false);
+    setCaptureProgress(0);
+    setAveragedResults(null);
+    setClassification(null);
+    setCapturedFrameCount(0);
+    setError(null);
+  }, [stopCamera]);
+
   useEffect(() => {
     return () => stopCamera();
   }, [stopCamera]);
 
   useEffect(() => {
-    if (!isScanning) {
+    if (phase !== "capturing") {
       releaseFaceLandmarker();
       setIsModelReady(false);
-      setEyeMeasurements(null);
+      setCaptureProgress(0);
+      samplesRef.current = [];
+      captureStartRef.current = null;
+      isModelReadyRef.current = false;
     }
-  }, [isScanning]);
+  }, [phase]);
 
   useEffect(() => {
-    if (!isScanning) {
+    if (phase !== "capturing") {
       return;
     }
 
     let cancelled = false;
     let animationId = 0;
     let lastVideoTime = -1;
-    let lastDebugUpdate = 0;
+    let lastProgressUpdate = 0;
     let stopSync: (() => void) | undefined;
     let detectTimestamp = 0;
+
+    const finishCapture = () => {
+      if (cancelled) {
+        return;
+      }
+
+      cancelled = true;
+      cancelAnimationFrame(animationId);
+      stopSync?.();
+      stopCamera();
+
+      const samples = samplesRef.current;
+      if (samples.length === 0) {
+        setError("No face detected during scan. Try better lighting and hold still.");
+        setPhase("idle");
+        return;
+      }
+
+      const averaged = averageFaceEyeMeasurements(samples);
+      setAveragedResults(averaged);
+      setClassification(classifyEyeShape(averaged));
+      setCapturedFrameCount(samples.length);
+      setPhase("results");
+    };
 
     async function runLandmarker() {
       const video = videoRef.current;
@@ -126,24 +185,39 @@ export default function CameraScanner() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const landmarks = results.faceLandmarks[0];
+        const now = performance.now();
+
+        if (landmarks && !isModelReadyRef.current) {
+          isModelReadyRef.current = true;
+          setIsModelReady(true);
+        }
+
         if (landmarks) {
           drawEyes(drawingUtils, landmarks);
 
-          const measurements = measureBothEyes(
-            landmarks,
-            video.videoWidth,
-            video.videoHeight,
-          );
-
-          const now = performance.now();
-          if (now - lastDebugUpdate >= DEBUG_UPDATE_MS) {
-            lastDebugUpdate = now;
-            setEyeMeasurements(measurements);
+          if (captureStartRef.current !== null) {
+            samplesRef.current.push(
+              measureBothEyes(landmarks, video.videoWidth, video.videoHeight),
+            );
           }
         }
 
-        if (!cancelled) {
-          setIsModelReady(true);
+        if (captureStartRef.current === null && landmarks) {
+          captureStartRef.current = now;
+        }
+
+        if (captureStartRef.current !== null) {
+          const elapsed = now - captureStartRef.current;
+          const progress = Math.min(100, (elapsed / SCAN_DURATION_MS) * 100);
+
+          if (now - lastProgressUpdate >= PROGRESS_UPDATE_MS) {
+            lastProgressUpdate = now;
+            setCaptureProgress(progress);
+          }
+
+          if (elapsed >= SCAN_DURATION_MS) {
+            finishCapture();
+          }
         }
       };
 
@@ -155,8 +229,7 @@ export default function CameraScanner() {
         const message =
           err instanceof Error ? err.message : "Face detection failed to start.";
         setError(message);
-        setIsScanning(false);
-        stopCamera();
+        resetScan();
       }
     });
 
@@ -165,12 +238,18 @@ export default function CameraScanner() {
       cancelAnimationFrame(animationId);
       stopSync?.();
     };
-  }, [isScanning, stopCamera]);
+  }, [phase, resetScan, stopCamera]);
 
   async function startScan() {
     setError(null);
     setIsModelReady(false);
-    setEyeMeasurements(null);
+    setCaptureProgress(0);
+    setAveragedResults(null);
+    setClassification(null);
+    setCapturedFrameCount(0);
+    samplesRef.current = [];
+    captureStartRef.current = null;
+    isModelReadyRef.current = false;
 
     try {
       const stream = await getCameraStream();
@@ -183,18 +262,21 @@ export default function CameraScanner() {
         await video.play();
       }
 
-      setIsScanning(true);
+      setPhase("capturing");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not access the camera.";
       setError(message);
+      setPhase("idle");
     }
   }
+
+  const showCamera = phase === "capturing";
 
   return (
     <div className="fixed inset-0 bg-black">
       <div
-        className={`absolute inset-0 overflow-hidden ${isScanning ? "block" : "hidden"}`}
+        className={`absolute inset-0 overflow-hidden ${showCamera ? "block" : "hidden"}`}
       >
         <video
           ref={videoRef}
@@ -210,15 +292,23 @@ export default function CameraScanner() {
         />
       </div>
 
-      {isScanning && <EyeDebugPanel measurements={eyeMeasurements} />}
-
-      {isScanning && !isModelReady && (
-        <p className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center text-sm text-white/80">
-          Loading face model…
-        </p>
+      {phase === "capturing" && (
+        <ScanProgressOverlay
+          progress={captureProgress}
+          isModelReady={isModelReady}
+        />
       )}
 
-      {!isScanning && (
+      {phase === "results" && averagedResults && classification && (
+        <ScanResultsScreen
+          measurements={averagedResults}
+          classification={classification}
+          frameCount={capturedFrameCount}
+          onScanAgain={resetScan}
+        />
+      )}
+
+      {phase === "idle" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
           {error && (
             <p className="max-w-sm text-center text-sm text-red-400">{error}</p>

@@ -10,6 +10,14 @@ export interface EyeMeasurements {
   height: number;
   aspectRatio: number;
   outerCornerAngleDeg: number;
+  /** Vertical opening relative to eye width (height / width). */
+  upperEyelidOpenness: number;
+  /** Brow-to-upper-lid distance relative to eye width. */
+  browDistance: number;
+  /** Iris diameter relative to eye width. */
+  irisVisibility: number;
+  /** Positive ≈ upturned outer corner; negative ≈ downturned. */
+  canthalTilt: number;
   confidence: number;
 }
 
@@ -109,11 +117,30 @@ export function measureEye(
   );
   const upper = toPixel(landmarks[config.upperLid], frameWidth, frameHeight);
   const lower = toPixel(landmarks[config.lowerLid], frameWidth, frameHeight);
+  const brow = toPixel(landmarks[config.browCenter], frameWidth, frameHeight);
+  const irisPoints = config.irisIndices.map((index) =>
+    toPixel(landmarks[index], frameWidth, frameHeight),
+  );
+
+  const width = distance(outer, inner);
+  const height = distance(upper, lower);
+  const upperEyelidOpenness = width > 0 ? height / width : 0;
+  const browDistance = width > 0 ? distance(brow, upper) / width : 0;
+  const canthalTilt = width > 0 ? (inner.y - outer.y) / width : 0;
+
+  const irisCenter = {
+    x: irisPoints.reduce((sum, p) => sum + p.x, 0) / irisPoints.length,
+    y: irisPoints.reduce((sum, p) => sum + p.y, 0) / irisPoints.length,
+  };
+  const irisRadius =
+    irisPoints.reduce((sum, p) => sum + distance(p, irisCenter), 0) /
+    irisPoints.length;
+  const irisVisibility = width > 0 ? (irisRadius * 2) / width : 0;
 
   return {
     side,
-    width: distance(outer, inner),
-    height: distance(upper, lower),
+    width,
+    height,
     aspectRatio: eyeAspectRatio(
       landmarks,
       config.earIndices,
@@ -121,7 +148,15 @@ export function measureEye(
       frameHeight,
     ),
     outerCornerAngleDeg: outerCornerAngleDeg(outer, upper, lower),
-    confidence: meanVisibility(landmarks, config.earIndices),
+    upperEyelidOpenness,
+    browDistance,
+    irisVisibility,
+    canthalTilt,
+    confidence: meanVisibility(landmarks, [
+      ...config.earIndices,
+      ...config.irisIndices,
+      config.browCenter,
+    ]),
   };
 }
 

@@ -12,6 +12,8 @@ export const EYE_LANDMARK_CONFIG = {
     innerCorner: 263,
     upperLid: 386,
     lowerLid: 374,
+    browCenter: 282,
+    irisIndices: [474, 475, 476, 477] as const,
   },
   right: {
     connections: FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
@@ -20,6 +22,8 @@ export const EYE_LANDMARK_CONFIG = {
     innerCorner: 133,
     upperLid: 159,
     lowerLid: 145,
+    browCenter: 52,
+    irisIndices: [469, 470, 471, 472] as const,
   },
 } as const;
 

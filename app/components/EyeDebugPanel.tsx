@@ -1,18 +1,8 @@
 import type { FaceEyeMeasurements } from "../lib/eyeMeasurements";
+import { formatEyeBlock } from "../lib/formatEyeMeasurements";
 
 interface EyeDebugPanelProps {
   measurements: FaceEyeMeasurements | null;
-}
-
-function formatEyeBlock(label: string, m: FaceEyeMeasurements["left"]) {
-  return [
-    label,
-    `  width: ${m.width.toFixed(1)} px`,
-    `  height: ${m.height.toFixed(1)} px`,
-    `  EAR: ${m.aspectRatio.toFixed(3)}`,
-    `  outer ∠: ${m.outerCornerAngleDeg.toFixed(1)}°`,
-    `  conf: ${(m.confidence * 100).toFixed(0)}%`,
-  ].join("\n");
 }
 
 export default function EyeDebugPanel({ measurements }: EyeDebugPanelProps) {
