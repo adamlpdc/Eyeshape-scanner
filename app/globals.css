@@ -66,9 +66,26 @@ body {
   animation: scan-sweep-glow 2s ease-in-out infinite;
 }
 
+@keyframes scan-guide-ready-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.008);
+  }
+}
+
+.scan-guide-ready {
+  animation: scan-guide-ready-pulse 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scan-sweep-line,
-  .scan-sweep-glow {
+  .scan-sweep-glow,
+  .scan-guide-ready {
     animation: none;
   }
 

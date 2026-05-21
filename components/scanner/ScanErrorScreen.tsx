@@ -1,4 +1,5 @@
 import { APP_COPY } from "@/constants/copy";
+import { trackRetryClicked } from "@/lib/analytics";
 import { SCAN_ERROR_COPY } from "@/constants/scan";
 import type { ScanError } from "@/types/scan";
 import Button from "@/components/ui/Button";
@@ -44,7 +45,13 @@ export default function ScanErrorScreen({ error, onRetry }: ScanErrorScreenProps
           )}
 
           <div className="mt-8">
-            <Button fullWidth onClick={onRetry}>
+            <Button
+              fullWidth
+              onClick={() => {
+                trackRetryClicked("error_screen");
+                onRetry();
+              }}
+            >
               {APP_COPY.retry}
             </Button>
           </div>

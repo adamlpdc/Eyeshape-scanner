@@ -1,9 +1,11 @@
-import Image from "next/image";
 import { APP_COPY, DEBUG_COPY } from "@/constants/copy";
+import { RECOMMENDATION_COPY } from "@/constants/lash-recommendation-engine";
+import { LASH_MAP_PROFILES } from "@/constants/lash-map-profiles";
 import {
-  EYE_SHAPE_BEAUTY,
-  RESULTS_COPY,
-} from "@/constants/eye-shape-beauty";
+  trackRecommendationClicked,
+  trackRetryClicked,
+} from "@/lib/analytics";
+import { getLashRecommendations } from "@/lib/recommendations/get-lash-recommendations";
 import { EYLURE_BRAND } from "@/constants/brand";
 import { formatShapeLabel } from "@/lib/classification/format-shape-label";
 import { formatEyeBlock } from "@/lib/measurements/format-measurements";
@@ -11,12 +13,15 @@ import type { EyeShape, EyeShapeClassification } from "@/types/classification";
 import type { FaceEyeMeasurements } from "@/types/eye";
 import DebugToggle from "./DebugToggle";
 import LashMapIllustration from "./results/LashMapIllustration";
+import ScanEyePreview from "./results/ScanEyePreview";
+import ProductRecommendationCard from "./results/ProductRecommendationCard";
 import PrivacyNotice from "./PrivacyNotice";
 
 interface ScanResultsScreenProps {
   measurements: FaceEyeMeasurements;
   classification: EyeShapeClassification;
   frameCount: number;
+  scanPreviewImage: string | null;
   showDebug: boolean;
   onDebugChange: (enabled: boolean) => void;
   onScanAgain: () => void;
@@ -26,23 +31,34 @@ export default function ScanResultsScreen({
   measurements,
   classification,
   frameCount,
+  scanPreviewImage,
   showDebug,
   onDebugChange,
   onScanAgain,
 }: ScanResultsScreenProps) {
-  const profile = EYE_SHAPE_BEAUTY[classification.primary];
+  const profile = getLashRecommendations(classification.primary);
+  const lashTip = LASH_MAP_PROFILES[classification.primary].tip;
   const shapeLabel = formatShapeLabel(classification.primary);
+
+  const handleRetry = (source: "results_header" | "results_footer") => {
+    trackRetryClicked(source);
+    onScanAgain();
+  };
+
+  const handleRecommendationClick = (product: (typeof profile.products)[number]) => {
+    trackRecommendationClicked(product, classification.primary);
+  };
 
   return (
     <div
       className="absolute inset-0 z-20 flex flex-col"
-      style={{ backgroundColor: EYLURE_BRAND.pink }}
+      style={{ backgroundColor: EYLURE_BRAND.resultsPink }}
     >
-      <div className="safe-top shrink-0 px-4 pt-4">
+      <div className="safe-top shrink-0 px-3 pt-3">
         <button
           type="button"
-          onClick={onScanAgain}
-          className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#2f2435] shadow-sm transition active:scale-[0.98]"
+          onClick={() => handleRetry("results_header")}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#e8c4cc]/90 bg-white px-4 py-2.5 text-sm font-semibold text-[#2f2435] shadow-sm transition active:scale-[0.98]"
         >
           <svg
             className="h-4 w-4"
@@ -58,36 +74,22 @@ export default function ScanResultsScreen({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-3">
-        <div className="mx-auto w-full max-w-md space-y-4">
-          <header className="flex flex-col items-center pt-2 text-center">
-            <Image
-              src="/eylure-logo-white.png"
-              alt="Eylure London"
-              width={200}
-              height={56}
-              className="h-auto w-[min(56vw,180px)] mix-blend-lighten"
-            />
-          </header>
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3">
+        <div className="w-full space-y-3">
+          {scanPreviewImage && <ScanEyePreview imageUrl={scanPreviewImage} />}
 
           <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
-            <p className="text-xs font-semibold tracking-wide text-[#5c4a62]/70 uppercase">
-              {RESULTS_COPY.yourEyeShape}
-            </p>
-            <h1 className="mt-1 text-4xl font-bold capitalize text-[#2f2435]">
-              {shapeLabel}
-            </h1>
-            {classification.secondary && (
-              <p className="mt-2 text-sm text-[#5c4a62]/80">
-                {RESULTS_COPY.alsoPossible}:{" "}
-                <span className="font-semibold capitalize text-[#2f2435]">
-                  {formatShapeLabel(classification.secondary)}
-                </span>
-              </p>
-            )}
+            <div className="flex items-start gap-3">
+              <EyeShapeIcon className="mt-0.5 h-8 w-8 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-[1.75rem] font-bold capitalize leading-tight text-[#2f2435]">
+                  {shapeLabel}
+                </h1>
+              </div>
+            </div>
 
             <h2 className="mt-5 text-sm font-bold text-[#2f2435]">
-              {RESULTS_COPY.aboutShape}
+              {RECOMMENDATION_COPY.aboutShape}
             </h2>
             <p className="mt-2 text-[15px] leading-relaxed text-[#5c4a62]">
               {profile.explanation}
@@ -96,38 +98,37 @@ export default function ScanResultsScreen({
 
           <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
             <h2 className="text-sm font-bold text-[#2f2435]">
-              {RESULTS_COPY.bestLashStyles}
+              {RECOMMENDATION_COPY.lashRecommendation}
+            </h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-[#5c4a62]">
+              {lashTip}
+            </p>
+          </article>
+
+          <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
+            <h2 className="text-sm font-bold text-[#2f2435]">
+              {RECOMMENDATION_COPY.recommendedProducts}
             </h2>
             <ul className="mt-3 space-y-3">
-              {profile.lashStyles.map((style, index) => (
-                <li
-                  key={style.name}
-                  className="flex gap-3 border-t border-[#e8c4cc]/60 pt-3 first:border-0 first:pt-0"
-                >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f4a0b0]/40 text-xs font-bold text-[#2f2435]">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-semibold text-[#2f2435]">{style.name}</p>
-                    <p className="mt-0.5 text-sm leading-snug text-[#5c4a62]">
-                      {style.detail}
-                    </p>
-                  </div>
+              {profile.products.map((product) => (
+                <li key={product.id}>
+                  <ProductRecommendationCard
+                    product={product}
+                    onProductClick={handleRecommendationClick}
+                  />
                 </li>
               ))}
             </ul>
           </article>
 
           <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-bold text-[#2f2435]">
-                {RESULTS_COPY.lashMap}
-              </h2>
-              <span className="rounded-full bg-[#f4a0b0]/30 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#5c4a62]">
-                {RESULTS_COPY.mapPlaceholder}
-              </span>
-            </div>
-            <LashMapIllustration label={profile.mapLabel} />
+            <h2 className="mb-4 text-sm font-bold text-[#2f2435]">
+              {RECOMMENDATION_COPY.lashMap}
+            </h2>
+            <LashMapIllustration
+              eyeShape={classification.primary}
+              label={profile.lashMapLabel}
+            />
           </article>
 
           <div className="rounded-2xl bg-[#fff8fa]/80 px-4 py-3">
@@ -165,15 +166,39 @@ export default function ScanResultsScreen({
         </div>
       </div>
 
-      <div className="safe-bottom shrink-0 px-4 pb-5 pt-2">
+      <div className="safe-bottom shrink-0 px-3 pb-5 pt-2">
         <button
           type="button"
-          onClick={onScanAgain}
+          onClick={() => handleRetry("results_footer")}
           className="w-full rounded-xl bg-white py-4 text-center text-lg font-bold tracking-wide text-[#2f2435] shadow-md transition active:scale-[0.98]"
         >
           {APP_COPY.scanAgain}
         </button>
       </div>
     </div>
+  );
+}
+
+function EyeShapeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 32 32"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M4 16c4-7 8-10 12-10s8 3 12 10c-4 7-8 10-12 10S8 23 4 16Z"
+        stroke={EYLURE_BRAND.resultsPink}
+        strokeWidth="2"
+      />
+      <circle
+        cx="16"
+        cy="16"
+        r="4"
+        stroke={EYLURE_BRAND.resultsPink}
+        strokeWidth="2"
+      />
+    </svg>
   );
 }

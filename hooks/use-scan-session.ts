@@ -12,7 +12,6 @@ import { getCameraStream } from "@/lib/camera/get-camera-stream";
 import { classifyEyeShape } from "@/lib/classification/classify-eye-shape";
 import { averageFaceEyeMeasurements } from "@/lib/measurements/average-measurements";
 import { measureBothEyes } from "@/lib/measurements/measure-eye";
-import { drawEyes } from "@/lib/mediapipe/draw-eyes";
 import {
   getFaceLandmarker,
   releaseFaceLandmarker,
@@ -23,13 +22,20 @@ import {
   assessScanReadiness,
   resetReadinessTracking,
 } from "@/lib/scan/assess-readiness";
+import {
+  trackEyeShapeDetected,
+  trackScanCompleted,
+  trackScanStarted,
+} from "@/lib/analytics";
+import { captureEyePreview } from "@/lib/scan/capture-eye-preview";
 import { createScanError } from "@/lib/scan/scan-error";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import type { EyeShapeClassification } from "@/types/classification";
 import type { FaceEyeMeasurements } from "@/types/eye";
 import type { ScanReadiness } from "@/types/scan-quality";
 import type { ScanError, ScanPhase } from "@/types/scan";
 
-const FETCHING_DURATION_MS = 2200;
+import { FETCHING_DURATION_MS } from "@/constants/fetching";
 
 const INITIAL_READINESS: ScanReadiness = {
   faceDetected: false,
@@ -65,6 +71,7 @@ export function useScanSession() {
   const readinessScoresRef = useRef<number[]>([]);
   const stableReadyFramesRef = useRef(0);
   const lastReadinessRef = useRef<ScanReadiness>(INITIAL_READINESS);
+  const lastLandmarksRef = useRef<NormalizedLandmark[] | null>(null);
 
   const [phase, setPhase] = useState<ScanPhase>("idle");
   const [isModelReady, setIsModelReady] = useState(false);
@@ -77,6 +84,8 @@ export function useScanSession() {
     useState<EyeShapeClassification | null>(null);
   const [capturedFrameCount, setCapturedFrameCount] = useState(0);
   const [error, setError] = useState<ScanError | null>(null);
+  const [capturedEmail, setCapturedEmail] = useState<string | null>(null);
+  const [scanPreviewImage, setScanPreviewImage] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -105,6 +114,9 @@ export function useScanSession() {
       setAveragedResults(null);
       setClassification(null);
       setCapturedFrameCount(0);
+      setCapturedEmail(null);
+      setScanPreviewImage(null);
+      lastLandmarksRef.current = null;
       stableReadyFramesRef.current = 0;
       setError(nextError);
     },
@@ -198,15 +210,23 @@ export function useScanSession() {
       }
 
       const averaged = averageFaceEyeMeasurements(samples);
+      const nextClassification = classifyEyeShape(averaged);
+
       setAveragedResults(averaged);
-      setClassification(classifyEyeShape(averaged));
+      setClassification(nextClassification);
       setCapturedFrameCount(samples.length);
       setScanSessionConfidence(sessionConfidence);
       setError(null);
+      trackEyeShapeDetected(nextClassification);
       setPhase("fetching");
 
       window.setTimeout(() => {
-        setPhase("results");
+        trackScanCompleted({
+          frameCount: samples.length,
+          sessionConfidence,
+          eyeShape: nextClassification.primary,
+        });
+        setPhase("unlock");
       }, FETCHING_DURATION_MS);
     };
 
@@ -218,6 +238,13 @@ export function useScanSession() {
       cancelled = true;
       cancelAnimationFrame(animationId);
       stopSync?.();
+
+      const video = videoRef.current;
+      const landmarks = lastLandmarksRef.current;
+      if (video && landmarks) {
+        setScanPreviewImage(captureEyePreview(video, landmarks));
+      }
+
       stopCamera();
 
       const samples = samplesRef.current;
@@ -252,10 +279,7 @@ export function useScanSession() {
 
       stopSync = observeVideoCanvasSync(video, canvas);
 
-      const [{ DrawingUtils }, landmarker] = await Promise.all([
-        import("@mediapipe/tasks-vision"),
-        getFaceLandmarker(),
-      ]);
+      const landmarker = await getFaceLandmarker();
 
       if (cancelled) {
         return;
@@ -265,8 +289,6 @@ export function useScanSession() {
       if (!ctx) {
         throw new Error("Could not get canvas context.");
       }
-
-      const drawingUtils = new DrawingUtils(ctx);
 
       const render = () => {
         if (cancelled) {
@@ -303,12 +325,15 @@ export function useScanSession() {
 
         lastReadinessRef.current = currentReadiness;
 
-        if (landmarks && !isModelReadyRef.current) {
-          isModelReadyRef.current = true;
+        if (
+          landmarks &&
+          (phaseRef.current === "scanning" || phaseRef.current === "countdown")
+        ) {
+          lastLandmarksRef.current = landmarks;
         }
 
-        if (landmarks) {
-          drawEyes(drawingUtils, landmarks);
+        if (landmarks && !isModelReadyRef.current) {
+          isModelReadyRef.current = true;
         }
 
         if (phaseRef.current === "aligning") {
@@ -392,6 +417,8 @@ export function useScanSession() {
     setAveragedResults(null);
     setClassification(null);
     setCapturedFrameCount(0);
+    setScanPreviewImage(null);
+    lastLandmarksRef.current = null;
     resetReadinessTracking();
     clearCaptureRefs(
       samplesRef,
@@ -413,6 +440,7 @@ export function useScanSession() {
       }
 
       setPhase("aligning");
+      trackScanStarted();
     } catch (err) {
       if (err instanceof CameraAccessError) {
         goToIdle(createScanError(err.code));
@@ -432,6 +460,11 @@ export function useScanSession() {
     void startScan();
   }, [startScan]);
 
+  const completeUnlock = useCallback((email: string) => {
+    setCapturedEmail(email);
+    setPhase("results");
+  }, []);
+
   return {
     videoRef,
     canvasRef,
@@ -444,9 +477,12 @@ export function useScanSession() {
     classification,
     capturedFrameCount,
     error,
+    capturedEmail,
+    scanPreviewImage,
     showCamera: isCameraActive,
     startScan,
     resetScan,
     retry,
+    completeUnlock,
   };
 }

@@ -29,6 +29,21 @@ export const PRIVACY_COPY = {
   short: "Face processing happens on-device. Nothing is uploaded.",
 } as const;
 
+export const UNLOCK_COPY = {
+  badge: "Results Ready",
+  title: "Unlock Your Personalised Lash Results",
+  subtitle: "Enter your email to reveal your perfect lash recommendations.",
+  cardTitle: "Your Results Are Waiting",
+  emailPlaceholder: "Enter your email address",
+  submit: "Unlock My Results",
+  invalidEmail: "Please enter a valid email address.",
+  legalPrefix: "By submitting, you agree to our",
+  privacyLabel: "Privacy Policy",
+  termsLabel: "Terms & Conditions",
+  privacyUrl: "https://www.pdcwellness.com/privacy-policy/",
+  termsUrl: "https://www.eylure.com/pages/terms-and-conditions",
+} as const;
+
 export const DEBUG_COPY = {
   label: "Show debug measurements",
   panelTitle: "Debug measurements",

@@ -11,7 +11,9 @@ import ScanFetchingScreen from "./ScanFetchingScreen";
 import ScanIdleScreen from "./ScanIdleScreen";
 import ScanQualityIndicators from "./ScanQualityIndicators";
 import ScanResultsScreen from "./ScanResultsScreen";
+import ScanUnlockScreen from "./ScanUnlockScreen";
 import ScanSweepEffect from "./ScanSweepEffect";
+import PrivacyNotice from "./PrivacyNotice";
 
 export default function CameraScanner() {
   const { showDebug, setShowDebug } = useDebugMode();
@@ -26,11 +28,13 @@ export default function CameraScanner() {
     averagedResults,
     classification,
     capturedFrameCount,
+    scanPreviewImage,
     error,
     showCamera,
     startScan,
     resetScan,
     retry,
+    completeUnlock,
   } = useScanSession();
 
   const showError = phase === "idle" && error !== null;
@@ -74,16 +78,30 @@ export default function CameraScanner() {
               isModelReady={isModelReady}
             />
           )}
+
+          <div className="shrink-0 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
+            <div className="rounded-xl bg-black/40 px-3 py-3 backdrop-blur-sm">
+              <PrivacyNotice compact />
+            </div>
+          </div>
         </div>
       )}
 
       {phase === "fetching" && <ScanFetchingScreen />}
+
+      {phase === "unlock" && classification && (
+        <ScanUnlockScreen
+          eyeShape={classification.primary}
+          onUnlock={completeUnlock}
+        />
+      )}
 
       {phase === "results" && averagedResults && classification && (
         <ScanResultsScreen
           measurements={averagedResults}
           classification={classification}
           frameCount={capturedFrameCount}
+          scanPreviewImage={scanPreviewImage}
           showDebug={showDebug}
           onDebugChange={setShowDebug}
           onScanAgain={resetScan}

@@ -1,3 +1,4 @@
+import { EYLURE_BRAND } from "@/constants/brand";
 import { SCAN_QUALITY_CONFIG } from "@/constants/scan-quality";
 import type { ScanReadiness } from "@/types/scan-quality";
 import type { ScanPhase } from "@/types/scan";
@@ -19,38 +20,68 @@ export default function AlignmentGuideOverlay({
     readiness.overall >= SCAN_QUALITY_CONFIG.minHoldStillConfidence &&
     readiness.faceDetected;
 
-  const outerClass =
-    phase === "scanning"
-      ? "border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.35)]"
-      : isReady
-        ? "border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.25)]"
-        : readiness.faceDetected
-          ? "border-white/80"
-          : "border-white/35";
+  const isScanning = phase === "scanning";
+  const hasFace = readiness.faceDetected;
 
-  const innerClass =
-    phase === "scanning"
-      ? "border-emerald-400/70"
-      : isReady
-        ? "border-emerald-400/60"
-        : readiness.faceDetected
-          ? "border-amber-400/80"
-          : "border-transparent";
+  const ringStyle = isScanning
+    ? {
+        borderColor: `${EYLURE_BRAND.pink}`,
+        boxShadow: `0 0 32px ${EYLURE_BRAND.pink}66, inset 0 0 20px ${EYLURE_BRAND.pink}22`,
+      }
+    : isReady
+      ? {
+          borderColor: EYLURE_BRAND.pink,
+          boxShadow: `0 0 28px ${EYLURE_BRAND.pink}55`,
+        }
+      : hasFace
+        ? {
+            borderColor: "rgba(255,255,255,0.75)",
+            boxShadow: "0 0 16px rgba(255,255,255,0.12)",
+          }
+        : {
+            borderColor: "rgba(255,255,255,0.35)",
+            boxShadow: "none",
+          };
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center px-8"
+      className="pointer-events-none absolute inset-0 z-[5]"
       aria-hidden
     >
-      <div className="relative flex h-[min(58vh,26rem)] w-[min(72vw,18rem)] items-center justify-center">
-        <div
-          className={`absolute inset-0 rounded-[50%] border-2 border-dashed transition-colors duration-200 ${outerClass}`}
-        />
-        {readiness.faceDetected && (
+      {/* Soft vignette — draws focus to the face without harsh UI chrome */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 78% 62% at 50% 44%, transparent 52%, rgba(0,0,0,0.5) 100%)",
+        }}
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center px-8">
+        <div className="relative h-[min(58vh,26rem)] w-[min(72vw,18rem)]">
           <div
-            className={`absolute inset-[12%] rounded-[50%] border-2 transition-colors duration-200 ${innerClass}`}
+            className={`absolute inset-0 rounded-[50%] border transition-all duration-500 ease-out ${
+              isReady && !isScanning ? "scan-guide-ready" : ""
+            }`}
+            style={{
+              borderWidth: isScanning ? 2 : 1.5,
+              ...ringStyle,
+            }}
           />
-        )}
+
+          {/* Subtle top accent — reads as a beauty frame, not a tech target */}
+          {hasFace && (
+            <div
+              className="absolute inset-x-[18%] top-[8%] h-px transition-opacity duration-500"
+              style={{
+                background: isReady
+                  ? `linear-gradient(90deg, transparent, ${EYLURE_BRAND.pink}, transparent)`
+                  : "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
+                opacity: isScanning ? 0.9 : 0.7,
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

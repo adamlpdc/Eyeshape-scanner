@@ -29,7 +29,7 @@ export default function ScanActionButton({
   const isActive = isCountdown || canHoldStill;
 
   return (
-    <div className="shrink-0 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+    <div className="shrink-0 px-6 pb-2 pt-4">
       <p className="mb-3 text-center text-sm text-white/60">
         {APP_COPY.holdHeadInPosition}
       </p>

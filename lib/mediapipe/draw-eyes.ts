@@ -4,6 +4,7 @@ import {
   type NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
 
+/** Optional debug overlay — not used in the consumer scan UI. */
 export function drawEyes(
   drawingUtils: DrawingUtils,
   landmarks: NormalizedLandmark[],

@@ -4,6 +4,7 @@ export type ScanPhase =
   | "countdown"
   | "scanning"
   | "fetching"
+  | "unlock"
   | "results";
 
 export type ScanErrorCode =
