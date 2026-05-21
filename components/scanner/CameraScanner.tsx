@@ -1,17 +1,25 @@
 "use client";
 
 import { MEDIA_CLASS } from "@/constants/scan";
+import { useDebugMode } from "@/hooks/use-debug-mode";
 import { useScanSession } from "@/hooks/use-scan-session";
+import AlignmentGuideOverlay from "./AlignmentGuideOverlay";
+import ScanErrorScreen from "./ScanErrorScreen";
+import ScanIdleScreen from "./ScanIdleScreen";
 import ScanProgressOverlay from "./ScanProgressOverlay";
+import ScanReadinessPanel from "./ScanReadinessPanel";
 import ScanResultsScreen from "./ScanResultsScreen";
 
 export default function CameraScanner() {
+  const { showDebug, setShowDebug } = useDebugMode();
   const {
     videoRef,
     canvasRef,
     phase,
     isModelReady,
+    readiness,
     captureProgress,
+    scanSessionConfidence,
     averagedResults,
     classification,
     capturedFrameCount,
@@ -19,7 +27,11 @@ export default function CameraScanner() {
     showCamera,
     startScan,
     resetScan,
+    retry,
   } = useScanSession();
+
+  const showError = phase === "idle" && error !== null;
+  const showQualityUi = phase === "aligning" || phase === "capturing";
 
   return (
     <div className="fixed inset-0 bg-black">
@@ -40,35 +52,38 @@ export default function CameraScanner() {
         />
       </div>
 
-      {phase === "capturing" && (
-        <ScanProgressOverlay
-          progress={captureProgress}
-          isModelReady={isModelReady}
-        />
+      {showQualityUi && (
+        <AlignmentGuideOverlay phase={phase} readiness={readiness} />
       )}
+
+      <ScanReadinessPanel
+        phase={phase}
+        readiness={readiness}
+        isModelReady={isModelReady}
+      />
+
+      <ScanProgressOverlay
+        phase={phase}
+        progress={captureProgress}
+        scanSessionConfidence={scanSessionConfidence}
+      />
 
       {phase === "results" && averagedResults && classification && (
         <ScanResultsScreen
           measurements={averagedResults}
           classification={classification}
+          scanSessionConfidence={scanSessionConfidence}
           frameCount={capturedFrameCount}
+          showDebug={showDebug}
+          onDebugChange={setShowDebug}
           onScanAgain={resetScan}
         />
       )}
 
-      {phase === "idle" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
-          {error && (
-            <p className="max-w-sm text-center text-sm text-red-400">{error}</p>
-          )}
-          <button
-            type="button"
-            onClick={startScan}
-            className="min-h-14 min-w-[200px] rounded-full bg-white px-8 py-4 text-lg font-semibold text-black shadow-lg active:scale-[0.98]"
-          >
-            Start scan
-          </button>
-        </div>
+      {showError && <ScanErrorScreen error={error} onRetry={retry} />}
+
+      {phase === "idle" && !error && (
+        <ScanIdleScreen onStart={startScan} />
       )}
     </div>
   );

@@ -14,13 +14,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Eye Shape Scanner",
-  description: "Scan your eye shape with your front-facing camera",
+  description:
+    "Private prototype — scan your eye shape on-device with your front-facing camera.",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
+  themeColor: "#f4a0b0",
 };
 
 export default function RootLayout({
@@ -33,7 +37,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full overflow-hidden">{children}</body>
+      <body className="min-h-full overflow-hidden bg-eylure-pink text-eylure-ink">
+        {children}
+      </body>
     </html>
   );
 }

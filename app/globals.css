@@ -1,32 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --eylure-pink: #f4a0b0;
+  --eylure-pink-bright: #f78da7;
+  --eylure-pink-bar: #f6b6c4;
+  --eylure-magenta: #c41b6a;
+  --eylure-card: #fff8fa;
+  --eylure-ink: #2f2435;
+  --background: var(--eylure-pink);
+  --foreground: var(--eylure-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-eylure-pink: var(--eylure-pink);
+  --color-eylure-pink-bright: var(--eylure-pink-bright);
+  --color-eylure-pink-bar: var(--eylure-pink-bar);
+  --color-eylure-magenta: var(--eylure-magenta);
+  --color-eylure-card: var(--eylure-card);
+  --color-eylure-ink: var(--eylure-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 html,
 body {
   height: 100%;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--eylure-pink);
+  color: var(--eylure-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.safe-top {
+  padding-top: max(1.5rem, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.eylure-screen {
+  background-color: var(--eylure-pink);
+}
+
+@keyframes eylure-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.eylure-fade-in {
+  animation: eylure-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eylure-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
