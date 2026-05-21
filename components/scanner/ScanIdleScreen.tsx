@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { EYLURE_COPY } from "@/constants/eylure-brand";
-import EylureLogo from "@/components/brand/EylureLogo";
+import { APP_COPY } from "@/constants/copy";
+import { EYLURE_BRAND } from "@/constants/brand";
 
 interface ScanIdleScreenProps {
   onStart: () => void;
@@ -8,43 +8,38 @@ interface ScanIdleScreenProps {
 
 export default function ScanIdleScreen({ onStart }: ScanIdleScreenProps) {
   return (
-    <div className="eylure-screen absolute inset-0 flex flex-col">
-      <div className="relative min-h-0 flex-1">
+    <div
+      className="absolute inset-0 flex flex-col"
+      style={{ backgroundColor: EYLURE_BRAND.pink }}
+    >
+      <header className="safe-top flex shrink-0 flex-col items-center px-6 pt-6">
         <Image
-          src="/eylure-hero.png"
-          alt=""
-          fill
+          src="/eylure-logo-white.png"
+          alt="Eylure London"
+          width={280}
+          height={80}
           priority
-          className="object-cover object-[center_20%]"
-          sizes="100vw"
+          className="h-auto w-[min(72vw,220px)] max-w-full mix-blend-lighten"
         />
-        <div className="absolute inset-0 bg-eylure-pink/25" aria-hidden />
+      </header>
 
-        <div className="safe-top relative z-10 flex flex-col items-center px-6 pt-6 text-center">
-          <EylureLogo />
-          <h1 className="mt-8 text-[2rem] font-bold leading-tight tracking-tight text-white drop-shadow-sm">
-            {EYLURE_COPY.analysisTitle}
-          </h1>
-          <p className="mt-2 max-w-xs text-lg font-medium text-white/95">
-            {EYLURE_COPY.brandLine}
-          </p>
-        </div>
+      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <h1 className="text-2xl font-bold leading-tight text-white sm:text-3xl">
+          {APP_COPY.analysisTitle}
+        </h1>
+        <p className="mt-3 max-w-xs text-base text-white/90">
+          {APP_COPY.tagline}
+        </p>
       </div>
 
-      <div className="safe-bottom relative z-10 shrink-0 px-5 pb-5">
+      <div className="safe-bottom px-6 pb-6">
         <button
           type="button"
           onClick={onStart}
-          className="w-full rounded-xl bg-white py-4 text-center text-lg font-bold tracking-[0.12em] text-eylure-ink shadow-lg transition active:scale-[0.98]"
+          className="w-full rounded-xl bg-white py-4 text-center text-lg font-bold tracking-[0.08em] text-[#2f2435] shadow-md transition active:scale-[0.98]"
         >
-          {EYLURE_COPY.start}
+          {APP_COPY.startLabel}
         </button>
-        <p className="mt-4 px-2 text-center text-xs leading-relaxed text-white/90">
-          {EYLURE_COPY.legal.split("Privacy Policy")[0]}
-          <span className="underline">Privacy Policy</span>
-          {" and "}
-          <span className="underline">Terms & Conditions</span>.
-        </p>
       </div>
     </div>
   );

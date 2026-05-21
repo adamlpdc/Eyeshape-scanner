@@ -84,19 +84,23 @@ function pickPrimaryIssue(
 }
 
 function buildSuggestions(
-  primaryIssue: ScanReadinessIssue | null,
+  rankedIssues: ScanReadinessIssue[],
   overall: number,
 ): string[] {
-  const suggestions: string[] = [];
-
-  if (primaryIssue) {
-    suggestions.push(READINESS_SUGGESTIONS[primaryIssue]);
+  if (rankedIssues.includes("no_face")) {
+    return [READINESS_SUGGESTIONS.no_face];
   }
 
-  if (overall < SCAN_QUALITY_CONFIG.minOverallConfidence) {
-    suggestions.push("Improve the items above before scanning starts.");
-  } else {
+  const suggestions: string[] = [];
+
+  for (const issue of rankedIssues.slice(0, 2)) {
+    suggestions.push(READINESS_SUGGESTIONS[issue]);
+  }
+
+  if (overall >= SCAN_QUALITY_CONFIG.minOverallConfidence) {
     suggestions.push("Hold still — scan will begin automatically.");
+  } else if (suggestions.length === 0) {
+    suggestions.push("Adjust position and lighting until confidence is high enough.");
   }
 
   return [...new Set(suggestions)];
@@ -155,12 +159,21 @@ export function assessScanReadiness(
     lightingResult.score * featureWeights.lighting +
     stillness * featureWeights.stillness;
 
-  const primaryIssue = pickPrimaryIssue([
+  const issueEntries = [
     { issue: distanceResult.issue, weight: 1 - distanceResult.score },
     { issue: alignmentResult.issue, weight: 1 - alignmentResult.score },
     { issue: lightingResult.issue, weight: 1 - lightingResult.score },
     { issue: stillnessIssue, weight: 1 - stillness },
-  ]);
+  ];
+
+  const primaryIssue = pickPrimaryIssue(issueEntries);
+
+  const rankedIssues = issueEntries
+    .filter((entry): entry is { issue: ScanReadinessIssue; weight: number } =>
+      entry.issue !== null,
+    )
+    .sort((a, b) => b.weight - a.weight)
+    .map((entry) => entry.issue);
 
   const roundedOverall = clamp01(overall);
 
@@ -172,7 +185,7 @@ export function assessScanReadiness(
     stillness,
     overall: roundedOverall,
     primaryIssue,
-    suggestions: buildSuggestions(primaryIssue, roundedOverall),
+    suggestions: buildSuggestions(rankedIssues, roundedOverall),
     canStartCapture: roundedOverall >= SCAN_QUALITY_CONFIG.minOverallConfidence,
   };
 }

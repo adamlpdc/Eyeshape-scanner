@@ -13,7 +13,7 @@ export default function ScanErrorScreen({ error, onRetry }: ScanErrorScreenProps
   const copy = SCAN_ERROR_COPY[error.code];
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-gradient-to-b from-zinc-900 via-black to-black">
+    <div className="absolute inset-0 z-20 flex flex-col bg-black">
       <div className="flex flex-1 flex-col justify-center px-6 py-10">
         <div className="mx-auto w-full max-w-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15">

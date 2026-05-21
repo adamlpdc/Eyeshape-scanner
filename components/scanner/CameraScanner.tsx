@@ -4,11 +4,14 @@ import { MEDIA_CLASS } from "@/constants/scan";
 import { useDebugMode } from "@/hooks/use-debug-mode";
 import { useScanSession } from "@/hooks/use-scan-session";
 import AlignmentGuideOverlay from "./AlignmentGuideOverlay";
+import ScanActionButton from "./ScanActionButton";
+import ScanCountdownOverlay from "./ScanCountdownOverlay";
 import ScanErrorScreen from "./ScanErrorScreen";
+import ScanFetchingScreen from "./ScanFetchingScreen";
 import ScanIdleScreen from "./ScanIdleScreen";
-import ScanProgressOverlay from "./ScanProgressOverlay";
-import ScanReadinessPanel from "./ScanReadinessPanel";
+import ScanQualityIndicators from "./ScanQualityIndicators";
 import ScanResultsScreen from "./ScanResultsScreen";
+import ScanSweepEffect from "./ScanSweepEffect";
 
 export default function CameraScanner() {
   const { showDebug, setShowDebug } = useDebugMode();
@@ -18,7 +21,7 @@ export default function CameraScanner() {
     phase,
     isModelReady,
     readiness,
-    captureProgress,
+    countdown,
     scanSessionConfidence,
     averagedResults,
     classification,
@@ -31,7 +34,8 @@ export default function CameraScanner() {
   } = useScanSession();
 
   const showError = phase === "idle" && error !== null;
-  const showQualityUi = phase === "aligning" || phase === "capturing";
+  const showScanUi =
+    phase === "aligning" || phase === "countdown" || phase === "scanning";
 
   return (
     <div className="fixed inset-0 bg-black">
@@ -52,21 +56,27 @@ export default function CameraScanner() {
         />
       </div>
 
-      {showQualityUi && (
-        <AlignmentGuideOverlay phase={phase} readiness={readiness} />
+      {showScanUi && (
+        <div className="absolute inset-0 z-10 flex flex-col">
+          <div className="relative min-h-0 flex-1">
+            <ScanQualityIndicators readiness={readiness} />
+            <AlignmentGuideOverlay phase={phase} readiness={readiness} />
+            {phase === "countdown" && countdown > 0 && (
+              <ScanCountdownOverlay value={countdown} />
+            )}
+            {phase === "scanning" && <ScanSweepEffect />}
+          </div>
+
+          {phase === "aligning" && (
+            <ScanActionButton
+              readiness={readiness}
+              isModelReady={isModelReady}
+            />
+          )}
+        </div>
       )}
 
-      <ScanReadinessPanel
-        phase={phase}
-        readiness={readiness}
-        isModelReady={isModelReady}
-      />
-
-      <ScanProgressOverlay
-        phase={phase}
-        progress={captureProgress}
-        scanSessionConfidence={scanSessionConfidence}
-      />
+      {phase === "fetching" && <ScanFetchingScreen />}
 
       {phase === "results" && averagedResults && classification && (
         <ScanResultsScreen

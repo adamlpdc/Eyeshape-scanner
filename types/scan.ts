@@ -1,9 +1,9 @@
 export type ScanPhase =
   | "idle"
   | "aligning"
-  | "capturing"
-  | "processing"
-  | "unlock"
+  | "countdown"
+  | "scanning"
+  | "fetching"
   | "results";
 
 export type ScanErrorCode =

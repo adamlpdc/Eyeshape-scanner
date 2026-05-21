@@ -2,8 +2,10 @@ import type { ScanReadinessIssue } from "@/types/scan-quality";
 
 /** Edit thresholds to tune when a scan may start. */
 export const SCAN_QUALITY_CONFIG = {
-  /** Minimum overall score (0–1) required to begin the 3s capture. */
-  minOverallConfidence: 0.72,
+  /** Minimum overall score (0–1) to enable the Hold still button. */
+  minHoldStillConfidence: 0.85,
+  /** Minimum overall score (0–1) required while sampling frames. */
+  minOverallConfidence: 0.85,
   /** Minimum average readiness during capture to accept results. */
   minScanSessionConfidence: 0.68,
   /** Consecutive ready frames needed before capture starts (~0.4s at 30fps). */
