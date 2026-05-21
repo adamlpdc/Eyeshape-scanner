@@ -1,13 +1,16 @@
 import { APP_COPY } from "@/constants/copy";
 import { SCAN_QUALITY_CONFIG } from "@/constants/scan-quality";
 import type { ScanReadiness } from "@/types/scan-quality";
+import type { ScanPhase } from "@/types/scan";
 
 interface ScanActionButtonProps {
+  phase: ScanPhase;
   readiness: ScanReadiness;
   isModelReady: boolean;
 }
 
 export default function ScanActionButton({
+  phase,
   readiness,
   isModelReady,
 }: ScanActionButtonProps) {
@@ -15,7 +18,15 @@ export default function ScanActionButton({
     isModelReady &&
     readiness.overall >= SCAN_QUALITY_CONFIG.minHoldStillConfidence;
 
-  const label = canHoldStill ? APP_COPY.holdStillStarting : APP_COPY.alignFace;
+  const isCountdown = phase === "countdown";
+
+  const label = isCountdown
+    ? APP_COPY.holdStill
+    : canHoldStill
+      ? APP_COPY.holdStillStarting
+      : APP_COPY.alignFace;
+
+  const isActive = isCountdown || canHoldStill;
 
   return (
     <div className="shrink-0 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
@@ -25,7 +36,7 @@ export default function ScanActionButton({
 
       <div
         className={`w-full rounded-xl py-4 text-center text-lg font-semibold ${
-          canHoldStill
+          isActive
             ? "bg-white text-black"
             : "bg-white/15 text-white/40"
         }`}
@@ -34,7 +45,7 @@ export default function ScanActionButton({
         {label}
       </div>
 
-      {isModelReady && !canHoldStill && readiness.suggestions[0] && (
+      {isModelReady && !isActive && readiness.suggestions[0] && (
         <p className="mt-3 text-center text-sm text-white/55">
           {readiness.suggestions[0]}
         </p>

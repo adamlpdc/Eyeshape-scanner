@@ -2,13 +2,25 @@ import { PRIVACY_COPY } from "@/constants/copy";
 
 interface PrivacyNoticeProps {
   compact?: boolean;
+  onLight?: boolean;
 }
 
-export default function PrivacyNotice({ compact = false }: PrivacyNoticeProps) {
+export default function PrivacyNotice({
+  compact = false,
+  onLight = false,
+}: PrivacyNoticeProps) {
   if (compact) {
     return (
-      <p className="flex items-start gap-2 text-sm leading-relaxed text-white/60">
-        <ShieldIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/90" />
+      <p
+        className={`flex items-start gap-2 text-sm leading-relaxed ${
+          onLight ? "text-[#5c4a62]/80" : "text-white/60"
+        }`}
+      >
+        <ShieldIcon
+          className={`mt-0.5 h-4 w-4 shrink-0 ${
+            onLight ? "text-[#c41b6a]" : "text-emerald-400/90"
+          }`}
+        />
         <span>{PRIVACY_COPY.short}</span>
       </p>
     );

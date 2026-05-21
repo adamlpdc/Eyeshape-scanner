@@ -67,8 +67,9 @@ export default function CameraScanner() {
             {phase === "scanning" && <ScanSweepEffect />}
           </div>
 
-          {phase === "aligning" && (
+          {(phase === "aligning" || phase === "countdown") && (
             <ScanActionButton
+              phase={phase}
               readiness={readiness}
               isModelReady={isModelReady}
             />
@@ -82,7 +83,6 @@ export default function CameraScanner() {
         <ScanResultsScreen
           measurements={averagedResults}
           classification={classification}
-          scanSessionConfidence={scanSessionConfidence}
           frameCount={capturedFrameCount}
           showDebug={showDebug}
           onDebugChange={setShowDebug}
