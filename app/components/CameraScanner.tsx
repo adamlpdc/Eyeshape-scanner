@@ -1,20 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import EyeDebugPanel from "./EyeDebugPanel";
+import { drawEyes } from "../lib/drawEyes";
 import { getCameraStream } from "../lib/getCameraStream";
 import {
   getFaceLandmarker,
   releaseFaceLandmarker,
 } from "../lib/faceLandmarker";
+import {
+  measureBothEyes,
+  type FaceEyeMeasurements,
+} from "../lib/eyeMeasurements";
+import { observeVideoCanvasSync } from "../lib/observeVideoCanvasSync";
 import { syncCanvasToVideo } from "../lib/syncCanvasToVideo";
 
+const MEDIA_CLASS =
+  "absolute inset-0 h-full w-full -scale-x-100 object-cover";
+
+const DEBUG_UPDATE_MS = 200;
+
 export default function CameraScanner() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
+  const [eyeMeasurements, setEyeMeasurements] =
+    useState<FaceEyeMeasurements | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
@@ -33,6 +46,7 @@ export default function CameraScanner() {
     if (!isScanning) {
       releaseFaceLandmarker();
       setIsModelReady(false);
+      setEyeMeasurements(null);
     }
   }, [isScanning]);
 
@@ -44,6 +58,9 @@ export default function CameraScanner() {
     let cancelled = false;
     let animationId = 0;
     let lastVideoTime = -1;
+    let lastDebugUpdate = 0;
+    let stopSync: (() => void) | undefined;
+    let detectTimestamp = 0;
 
     async function runLandmarker() {
       const video = videoRef.current;
@@ -64,9 +81,9 @@ export default function CameraScanner() {
         return;
       }
 
-      syncCanvasToVideo(video, canvas);
+      stopSync = observeVideoCanvasSync(video, canvas);
 
-      const [{ FaceLandmarker, DrawingUtils }, landmarker] = await Promise.all([
+      const [{ DrawingUtils }, landmarker] = await Promise.all([
         import("@mediapipe/tasks-vision"),
         getFaceLandmarker(),
       ]);
@@ -102,44 +119,27 @@ export default function CameraScanner() {
         }
         lastVideoTime = video.currentTime;
 
-        const results = landmarker.detectForVideo(
-          video,
-          performance.now(),
-        );
+        detectTimestamp = Math.max(detectTimestamp + 1, video.currentTime * 1000);
+
+        const results = landmarker.detectForVideo(video, detectTimestamp);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (const landmarks of results.faceLandmarks) {
-          drawingUtils.drawConnectors(
+        const landmarks = results.faceLandmarks[0];
+        if (landmarks) {
+          drawEyes(drawingUtils, landmarks);
+
+          const measurements = measureBothEyes(
             landmarks,
-            FaceLandmarker.FACE_LANDMARKS_CONTOURS,
-            { color: "#4ade80", lineWidth: 1 },
+            video.videoWidth,
+            video.videoHeight,
           );
-          drawingUtils.drawConnectors(
-            landmarks,
-            FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
-            { color: "#38bdf8", lineWidth: 1 },
-          );
-          drawingUtils.drawConnectors(
-            landmarks,
-            FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
-            { color: "#38bdf8", lineWidth: 1 },
-          );
-          drawingUtils.drawConnectors(
-            landmarks,
-            FaceLandmarker.FACE_LANDMARKS_LEFT_IRIS,
-            { color: "#fbbf24", lineWidth: 1 },
-          );
-          drawingUtils.drawConnectors(
-            landmarks,
-            FaceLandmarker.FACE_LANDMARKS_RIGHT_IRIS,
-            { color: "#fbbf24", lineWidth: 1 },
-          );
-          drawingUtils.drawLandmarks(landmarks, {
-            color: "#86efac",
-            lineWidth: 0.5,
-            radius: 1,
-          });
+
+          const now = performance.now();
+          if (now - lastDebugUpdate >= DEBUG_UPDATE_MS) {
+            lastDebugUpdate = now;
+            setEyeMeasurements(measurements);
+          }
         }
 
         if (!cancelled) {
@@ -163,12 +163,14 @@ export default function CameraScanner() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(animationId);
+      stopSync?.();
     };
-  }, [isScanning]);
+  }, [isScanning, stopCamera]);
 
   async function startScan() {
     setError(null);
     setIsModelReady(false);
+    setEyeMeasurements(null);
 
     try {
       const stream = await getCameraStream();
@@ -190,27 +192,28 @@ export default function CameraScanner() {
   }
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black">
-      <video
-        ref={videoRef}
-        className={`absolute inset-0 h-full w-full -scale-x-100 object-cover ${
-          isScanning ? "block" : "hidden"
-        }`}
-        playsInline
-        muted
-        autoPlay
-      />
+    <div className="fixed inset-0 bg-black">
+      <div
+        className={`absolute inset-0 overflow-hidden ${isScanning ? "block" : "hidden"}`}
+      >
+        <video
+          ref={videoRef}
+          className={MEDIA_CLASS}
+          playsInline
+          muted
+          autoPlay
+        />
+        <canvas
+          ref={canvasRef}
+          className={`${MEDIA_CLASS} pointer-events-none`}
+          aria-hidden
+        />
+      </div>
 
-      <canvas
-        ref={canvasRef}
-        className={`pointer-events-none absolute inset-0 h-full w-full -scale-x-100 object-cover ${
-          isScanning ? "block" : "hidden"
-        }`}
-        aria-hidden
-      />
+      {isScanning && <EyeDebugPanel measurements={eyeMeasurements} />}
 
       {isScanning && !isModelReady && (
-        <p className="pointer-events-none absolute inset-x-0 bottom-8 text-center text-sm text-white/80">
+        <p className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center text-sm text-white/80">
           Loading face model…
         </p>
       )}
