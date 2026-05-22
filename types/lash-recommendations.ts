@@ -1,19 +1,17 @@
 import type { EyeShape } from "@/types/classification";
 
-/**
- * Placeholder product card — replace name, URLs, and image when SKUs are final.
- * The beauty team should keep exactly three products per eye shape.
- */
+/** Product card served on the results screen (SKU-led from Boots catalog). */
 export interface ProductRecommendation {
-  /** Internal id for analytics or deep links, e.g. "hooded-730". */
+  /** SKU code — primary identifier for analytics and deep links. */
   id: string;
+  sku: string;
   name: string;
-  tagline: string;
-  /** Shown on card, e.g. "No.1 match", "Everyday", "Evening". */
+  tagline?: string;
   badge?: string;
-  /** Product detail page — leave empty for prototype. */
+  tryOnUrl?: string;
+  /** Boots product page — shown as “Buy at Boots”. */
   productUrl?: string;
-  /** Pack shot path under /public or full CDN URL. */
+  /** Pack shot at `/public/products/{sku}.jpg`. */
   imageUrl?: string;
 }
 
@@ -21,11 +19,8 @@ export interface ProductRecommendation {
 export interface EyeShapeRecommendation {
   explanation: string;
   lashMapLabel: string;
-  products: [
-    ProductRecommendation,
-    ProductRecommendation,
-    ProductRecommendation,
-  ];
+  /** Up to three products: shape-matched first, “All” catalog item last. */
+  products: ProductRecommendation[];
 }
 
 export type EyeShapeRecommendationMap = Record<EyeShape, EyeShapeRecommendation>;

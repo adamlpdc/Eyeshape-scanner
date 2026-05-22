@@ -40,8 +40,8 @@ export default function ScanResultsScreen({
   const lashTip = LASH_MAP_PROFILES[classification.primary].tip;
   const shapeLabel = formatShapeLabel(classification.primary);
 
-  const handleRetry = (source: "results_header" | "results_footer") => {
-    trackRetryClicked(source);
+  const handleScanAgain = () => {
+    trackRetryClicked("results_header");
     onScanAgain();
   };
 
@@ -57,7 +57,7 @@ export default function ScanResultsScreen({
       <div className="safe-top shrink-0 px-3 pt-3">
         <button
           type="button"
-          onClick={() => handleRetry("results_header")}
+          onClick={handleScanAgain}
           className="inline-flex items-center gap-2 rounded-xl border border-[#e8c4cc]/90 bg-white px-4 py-2.5 text-sm font-semibold text-[#2f2435] shadow-sm transition active:scale-[0.98]"
         >
           <svg
@@ -70,11 +70,11 @@ export default function ScanResultsScreen({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
           </svg>
-          Try Again
+          {APP_COPY.scanAgain}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3">
+      <div className="safe-bottom flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3">
         <div className="w-full space-y-3">
           {scanPreviewImage && <ScanEyePreview imageUrl={scanPreviewImage} />}
 
@@ -164,16 +164,6 @@ export default function ScanResultsScreen({
             </div>
           )}
         </div>
-      </div>
-
-      <div className="safe-bottom shrink-0 px-3 pb-5 pt-2">
-        <button
-          type="button"
-          onClick={() => handleRetry("results_footer")}
-          className="w-full rounded-xl bg-white py-4 text-center text-lg font-bold tracking-wide text-[#2f2435] shadow-md transition active:scale-[0.98]"
-        >
-          {APP_COPY.scanAgain}
-        </button>
       </div>
     </div>
   );

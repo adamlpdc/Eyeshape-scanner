@@ -12,7 +12,7 @@ export const ANALYTICS_EVENT = {
 export type AnalyticsEventName =
   (typeof ANALYTICS_EVENT)[keyof typeof ANALYTICS_EVENT];
 
-export type RetryClickSource = "error_screen" | "results_header" | "results_footer";
+export type RetryClickSource = "error_screen" | "results_header";
 
 export interface AnalyticsEventPayloads {
   scan_started: Record<string, never>;
@@ -31,8 +31,10 @@ export interface AnalyticsEventPayloads {
   };
   recommendation_clicked: {
     productId: string;
+    productSku: string;
     productName: string;
     eyeShape: EyeShape;
+    hasTryOnUrl: boolean;
     hasProductUrl: boolean;
   };
 }

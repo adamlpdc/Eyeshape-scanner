@@ -37,8 +37,10 @@ export function trackRecommendationClicked(
 ): void {
   trackEvent(ANALYTICS_EVENT.RECOMMENDATION_CLICKED, {
     productId: product.id,
+    productSku: product.sku,
     productName: product.name,
     eyeShape,
+    hasTryOnUrl: Boolean(product.tryOnUrl?.trim()),
     hasProductUrl: Boolean(product.productUrl?.trim()),
   });
 }
