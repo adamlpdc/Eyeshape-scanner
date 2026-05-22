@@ -35,9 +35,7 @@ export default function ScanFetchingScreen() {
       style={{ backgroundColor: EYLURE_BRAND.resultsPink }}
     >
       <header className="safe-top flex shrink-0 flex-col items-center pt-5 text-center">
-        <EylureLogoImage
-          className="h-auto w-[min(68vw,200px)] max-w-full brightness-0 invert"
-        />
+        <EylureLogoImage />
         <h1 className="mt-6 max-w-sm text-[1.65rem] font-bold leading-tight text-white">
           {FETCHING_COPY.title}
         </h1>

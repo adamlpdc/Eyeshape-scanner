@@ -55,10 +55,7 @@ export default function ScanUnlockScreen({
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6">
         <header className="safe-top flex shrink-0 flex-col items-center pt-4 text-center">
-          <EylureLogoImage
-            priority
-            className="h-auto w-[min(72vw,220px)] max-w-full brightness-0 invert"
-          />
+          <EylureLogoImage priority />
 
           <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/25 px-4 py-2 shadow-sm backdrop-blur-[2px]">
             <LockIcon className="h-4 w-4 text-white" />
