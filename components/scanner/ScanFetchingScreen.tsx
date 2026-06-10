@@ -9,13 +9,32 @@ const RING_RADIUS = 54;
 const RING_STROKE = 10;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-export default function ScanFetchingScreen() {
-  const [stepIndex, setStepIndex] = useState(0);
+interface ScanFetchingScreenProps {
+  /** Preview/screenshots — freeze on step 0–3 (25%–100%). */
+  previewStepIndex?: number;
+}
+
+export default function ScanFetchingScreen({
+  previewStepIndex,
+}: ScanFetchingScreenProps) {
+  const frozenStepIndex =
+    previewStepIndex !== undefined
+      ? Math.min(
+          Math.max(previewStepIndex, 0),
+          FETCHING_COPY.steps.length - 1,
+        )
+      : undefined;
+  const [stepIndex, setStepIndex] = useState(frozenStepIndex ?? 0);
   const step = FETCHING_COPY.steps[stepIndex] ?? FETCHING_COPY.steps[0];
   const progressOffset =
     RING_CIRCUMFERENCE * (1 - step.progress / 100);
 
   useEffect(() => {
+    if (frozenStepIndex !== undefined) {
+      setStepIndex(frozenStepIndex);
+      return;
+    }
+
     if (stepIndex >= FETCHING_COPY.steps.length - 1) {
       return;
     }
@@ -27,7 +46,7 @@ export default function ScanFetchingScreen() {
     }, FETCHING_STEP_MS);
 
     return () => window.clearTimeout(timer);
-  }, [stepIndex]);
+  }, [stepIndex, frozenStepIndex]);
 
   return (
     <div
