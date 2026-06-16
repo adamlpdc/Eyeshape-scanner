@@ -35,6 +35,7 @@ export const UNLOCK_COPY = {
   subtitle: "Enter your email to reveal your perfect lash recommendations.",
   cardTitle: "Your results are waiting",
   emailPlaceholder: "Enter your email address",
+  newsletterLabel: "Sign up to our newsletter",
   submit: "Unlock my results",
   invalidEmail: "Please enter a valid email address.",
   legalPrefix: "By submitting, you agree to our",

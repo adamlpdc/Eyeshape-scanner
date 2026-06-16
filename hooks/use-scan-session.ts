@@ -85,6 +85,7 @@ export function useScanSession() {
   const [capturedFrameCount, setCapturedFrameCount] = useState(0);
   const [error, setError] = useState<ScanError | null>(null);
   const [capturedEmail, setCapturedEmail] = useState<string | null>(null);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [scanPreviewImage, setScanPreviewImage] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
@@ -115,6 +116,7 @@ export function useScanSession() {
       setClassification(null);
       setCapturedFrameCount(0);
       setCapturedEmail(null);
+      setNewsletterOptIn(false);
       setScanPreviewImage(null);
       lastLandmarksRef.current = null;
       stableReadyFramesRef.current = 0;
@@ -460,8 +462,9 @@ export function useScanSession() {
     void startScan();
   }, [startScan]);
 
-  const completeUnlock = useCallback((email: string) => {
+  const completeUnlock = useCallback((email: string, optedInToNewsletter: boolean) => {
     setCapturedEmail(email);
+    setNewsletterOptIn(optedInToNewsletter);
     setPhase("results");
   }, []);
 
@@ -478,6 +481,7 @@ export function useScanSession() {
     capturedFrameCount,
     error,
     capturedEmail,
+    newsletterOptIn,
     scanPreviewImage,
     showCamera: isCameraActive,
     startScan,

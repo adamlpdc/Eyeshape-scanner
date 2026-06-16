@@ -8,7 +8,7 @@ import type { EyeShape } from "@/types/classification";
 
 interface ScanUnlockScreenProps {
   eyeShape: EyeShape;
-  onUnlock: (email: string) => void;
+  onUnlock: (email: string, newsletterOptIn: boolean) => void;
 }
 
 function isValidEmail(value: string): boolean {
@@ -20,6 +20,7 @@ export default function ScanUnlockScreen({
   onUnlock,
 }: ScanUnlockScreenProps) {
   const [email, setEmail] = useState("");
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accent = EYLURE_BRAND.accent;
 
@@ -33,7 +34,7 @@ export default function ScanUnlockScreen({
     }
 
     setError(null);
-    onUnlock(trimmed);
+    onUnlock(trimmed, newsletterOptIn);
   };
 
   return (
@@ -102,6 +103,18 @@ export default function ScanUnlockScreen({
               placeholder={UNLOCK_COPY.emailPlaceholder}
               className="w-full rounded-xl border border-[#ddd5d9] bg-white px-4 py-4 text-base text-[#2f2435] outline-none transition placeholder:text-[#9a8f96] focus:border-[#EF0078] focus:ring-2 focus:ring-[#EF0078]/15"
             />
+
+            <label className="mt-4 flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                onChange={(event) => setNewsletterOptIn(event.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-[#ddd5d9] accent-[#EF0078]"
+              />
+              <span className="text-sm leading-snug text-[#5c4a62]">
+                {UNLOCK_COPY.newsletterLabel}
+              </span>
+            </label>
 
             {error && (
               <p className="mt-2 text-sm" style={{ color: accent }} role="alert">
