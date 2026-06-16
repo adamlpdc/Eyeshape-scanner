@@ -1,6 +1,6 @@
 export const APP_COPY = {
-  name: "Eye Shape Scanner",
-  analysisTitle: "Eye Shape Analysis",
+  name: "Eye shape scanner",
+  analysisTitle: "Eye shape analysis",
   tagline: "Discover your perfect lash match",
   startScan: "Start scan",
   startLabel: "START",
@@ -25,17 +25,17 @@ export function scanStartsAtCopy(minPercent: number): string {
 
 export const PRIVACY_COPY = {
   title: "Processed on your device",
-  body: "Your camera feed and face landmarks are analyzed locally in your browser. No photos or video are uploaded to our servers.",
+  body: "Your camera feed and face landmarks are analysed locally in your browser. No photos or video are uploaded to our servers.",
   short: "Face processing happens on-device. Nothing is uploaded.",
 } as const;
 
 export const UNLOCK_COPY = {
-  badge: "Results Ready",
-  title: "Unlock Your Personalised Lash Results",
+  badge: "Results ready",
+  title: "Unlock your personalised lash results",
   subtitle: "Enter your email to reveal your perfect lash recommendations.",
-  cardTitle: "Your Results Are Waiting",
+  cardTitle: "Your results are waiting",
   emailPlaceholder: "Enter your email address",
-  submit: "Unlock My Results",
+  submit: "Unlock my results",
   invalidEmail: "Please enter a valid email address.",
   legalPrefix: "By submitting, you agree to our",
   privacyLabel: "Privacy Policy",

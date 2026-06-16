@@ -33,7 +33,7 @@ export const READINESS_SUGGESTIONS: Record<ScanReadinessIssue, string> = {
   no_face: "Position your face inside the oval guide.",
   too_close: "Move your phone slightly farther away.",
   too_far: "Move closer so your face fills the oval.",
-  off_center: "Center your face in the oval guide.",
+  off_center: "Centre your face in the oval guide.",
   too_dark: "Move to a brighter area or face a light source.",
   too_bright: "Avoid strong backlight or harsh overhead light.",
   low_contrast: "Improve lighting so your eyes are clearly visible.",

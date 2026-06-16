@@ -18,10 +18,10 @@ export const RECOMMENDATION_COPY = {
   yourEyeShape: "Your eye shape",
   scanPreviewAlt: "Close-up of your eyes from the scan",
   aboutShape: "Characteristics",
-  lashRecommendation: "Lash Recommendation",
+  lashRecommendation: "Lash recommendation",
   recommendedProducts: "Recommended for you",
   productPlaceholder: "Image coming soon",
-  virtualTryOn: "Virtual try on",
+  virtualTryOn: "Virtual try-on",
   buyAtBoots: "Buy at Boots",
   lashMap: "Recommended lash map",
   /** Shown when a scan cannot determine eye shape (from Eye shape copy.docx). */

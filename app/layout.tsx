@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Eye Shape Scanner",
+  title: "Eye shape scanner",
   description:
     "Private prototype — scan your eye shape on-device with your front-facing camera.",
   robots: { index: false, follow: false },

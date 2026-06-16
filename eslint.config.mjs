@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Copied from @mediapipe/tasks-vision on postinstall — not app source
+    "public/mediapipe/**",
   ]),
 ]);
 
