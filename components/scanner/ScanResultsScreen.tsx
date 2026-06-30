@@ -9,7 +9,6 @@ import { getLashRecommendations } from "@/lib/recommendations/get-lash-recommend
 import { EYLURE_BRAND } from "@/constants/brand";
 import { formatShapeLabel } from "@/lib/classification/format-shape-label";
 import type { EyeShapeClassification } from "@/types/classification";
-import LashMapIllustration from "./results/LashMapIllustration";
 import ScanEyePreview from "./results/ScanEyePreview";
 import ProductRecommendationCard from "./results/ProductRecommendationCard";
 import PrivacyNotice from "./PrivacyNotice";
@@ -108,16 +107,6 @@ export default function ScanResultsScreen({
                 </li>
               ))}
             </ul>
-          </article>
-
-          <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
-            <h2 className="mb-4 text-sm font-bold text-[#2f2435]">
-              {RECOMMENDATION_COPY.lashMap}
-            </h2>
-            <LashMapIllustration
-              eyeShape={classification.primary}
-              label={profile.lashMapLabel}
-            />
           </article>
 
           <div className="rounded-2xl bg-[#fff8fa]/80 px-4 py-3">
