@@ -18,7 +18,7 @@ export default function ScanEyePreview({ imageUrl }: ScanEyePreviewProps) {
       <img
         src={imageUrl}
         alt={RECOMMENDATION_COPY.scanPreviewAlt}
-        className="aspect-[5.56/1] w-full rounded-xl object-cover object-[center_40%]"
+        className="aspect-[4/5] w-full rounded-xl object-cover object-center"
       />
     </div>
   );

@@ -16,7 +16,7 @@ import type { EyeShape } from "@/types/classification";
 /** UI labels used on the results screen (safe to edit). */
 export const RECOMMENDATION_COPY = {
   yourEyeShape: "Your eye shape",
-  scanPreviewAlt: "Close-up of your eyes from the scan",
+  scanPreviewAlt: "Photo from your scan",
   aboutShape: "Characteristics",
   lashRecommendation: "Lash recommendation",
   recommendedProducts: "Recommended for you",

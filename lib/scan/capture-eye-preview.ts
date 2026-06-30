@@ -1,40 +1,32 @@
-import { FaceLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { EYE_LANDMARK_CONFIG } from "@/constants/eye-landmarks";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 const MAX_OUTPUT_WIDTH = 1280;
 const JPEG_QUALITY = 0.88;
-/** Wide landscape crop — full-width eye-area framing on results. */
-const TARGET_ASPECT = 5.56;
-
-function collectEyeRegionIndices(): number[] {
-  const indices = new Set<number>();
-
-  for (const eye of Object.values(EYE_LANDMARK_CONFIG)) {
-    for (const connection of eye.connections) {
-      indices.add(connection.start);
-      indices.add(connection.end);
-    }
-    indices.add(eye.outerCorner);
-    indices.add(eye.innerCorner);
-    indices.add(eye.upperLid);
-    indices.add(eye.lowerLid);
-    indices.add(eye.browCenter);
-    for (const irisIndex of eye.irisIndices) {
-      indices.add(irisIndex);
-    }
-  }
-
-  return [...indices];
-}
-
-const EYE_REGION_INDICES = collectEyeRegionIndices();
+/** Portrait crop for the results screen — full face, not a tight eye crop. */
+const TARGET_ASPECT = 4 / 5;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function getFaceBounds(landmarks: NormalizedLandmark[]) {
+  let minX = 1;
+  let minY = 1;
+  let maxX = 0;
+  let maxY = 0;
+
+  for (const point of landmarks) {
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
+  }
+
+  return { minX, minY, maxX, maxY };
+}
+
 /**
- * Crops the eye region from a scan frame (on-device). Returns a JPEG data URL
+ * Crops a portrait face preview from a scan frame (on-device). Returns a JPEG data URL
  * or null if capture fails. Output is horizontally mirrored to match the selfie preview.
  */
 export function captureEyePreview(
@@ -42,45 +34,36 @@ export function captureEyePreview(
   landmarks: NormalizedLandmark[],
 ): string | null {
   const { videoWidth, videoHeight } = video;
-  if (videoWidth === 0 || videoHeight === 0) {
+  if (videoWidth === 0 || videoHeight === 0 || landmarks.length === 0) {
     return null;
   }
 
-  let minX = 1;
-  let minY = 1;
-  let maxX = 0;
-  let maxY = 0;
-
-  for (const index of EYE_REGION_INDICES) {
-    const point = landmarks[index];
-    if (!point) {
-      continue;
-    }
-    minX = Math.min(minX, point.x);
-    minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x);
-    maxY = Math.max(maxY, point.y);
-  }
-
+  const { minX, minY, maxX, maxY } = getFaceBounds(landmarks);
   if (maxX <= minX || maxY <= minY) {
     return null;
   }
 
   const regionWidth = maxX - minX;
   const regionHeight = maxY - minY;
-  const padX = regionWidth * 1.44;
-  const padY = regionHeight * 0.42;
+  const padX = regionWidth * 0.2;
+  const padTop = regionHeight * 0.35;
+  const padBottom = regionHeight * 0.15;
 
   let normMinX = clamp01(minX - padX);
-  let normMinY = clamp01(minY - padY);
+  let normMinY = clamp01(minY - padTop);
   let normMaxX = clamp01(maxX + padX);
-  let normMaxY = clamp01(maxY + padY);
+  let normMaxY = clamp01(maxY + padBottom);
 
   const cropWidth = normMaxX - normMinX;
   const cropHeight = normMaxY - normMinY;
   const aspect = cropWidth / cropHeight;
 
-  if (aspect < TARGET_ASPECT) {
+  if (aspect > TARGET_ASPECT) {
+    const centerY = (normMinY + normMaxY) / 2;
+    const targetHeight = cropWidth / TARGET_ASPECT;
+    normMinY = clamp01(centerY - targetHeight / 2);
+    normMaxY = clamp01(centerY + targetHeight / 2);
+  } else {
     const centerX = (normMinX + normMaxX) / 2;
     const targetWidth = cropHeight * TARGET_ASPECT;
     normMinX = clamp01(centerX - targetWidth / 2);
