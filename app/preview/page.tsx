@@ -4,7 +4,7 @@ interface PreviewPageProps {
   searchParams: Promise<{ screen?: string; step?: string }>;
 }
 
-/** Renders a single scanner screen for QA and marketing screenshots. Not linked from the app. */
+/** QA/marketing screen previews — disabled in production unless ENABLE_PREVIEW=true. */
 export default async function PreviewPage({ searchParams }: PreviewPageProps) {
   const { screen = "idle", step } = await searchParams;
   const fetchingStep =

@@ -37,7 +37,7 @@ function toRecommendation(product: BootsCatalogProduct): ProductRecommendation {
 
 /**
  * Picks up to 3 Boots catalog products for a scan result:
- * 2 from the eye-shape pool (topped up from "All" if needed), then 1 from "All" last.
+ * 2 random from the eye-shape pool (topped up from "All" if needed), then 1 random from "All" last.
  */
 export function pickProductRecommendations(
   eyeShape: EyeShape,

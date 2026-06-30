@@ -1,4 +1,4 @@
-import { APP_COPY, DEBUG_COPY } from "@/constants/copy";
+import { APP_COPY } from "@/constants/copy";
 import { RECOMMENDATION_COPY } from "@/constants/lash-recommendation-engine";
 import { LASH_MAP_PROFILES } from "@/constants/lash-map-profiles";
 import {
@@ -8,32 +8,21 @@ import {
 import { getLashRecommendations } from "@/lib/recommendations/get-lash-recommendations";
 import { EYLURE_BRAND } from "@/constants/brand";
 import { formatShapeLabel } from "@/lib/classification/format-shape-label";
-import { formatEyeBlock } from "@/lib/measurements/format-measurements";
-import type { EyeShape, EyeShapeClassification } from "@/types/classification";
-import type { FaceEyeMeasurements } from "@/types/eye";
-import DebugToggle from "./DebugToggle";
+import type { EyeShapeClassification } from "@/types/classification";
 import LashMapIllustration from "./results/LashMapIllustration";
 import ScanEyePreview from "./results/ScanEyePreview";
 import ProductRecommendationCard from "./results/ProductRecommendationCard";
 import PrivacyNotice from "./PrivacyNotice";
 
 interface ScanResultsScreenProps {
-  measurements: FaceEyeMeasurements;
   classification: EyeShapeClassification;
-  frameCount: number;
   scanPreviewImage: string | null;
-  showDebug: boolean;
-  onDebugChange: (enabled: boolean) => void;
   onScanAgain: () => void;
 }
 
 export default function ScanResultsScreen({
-  measurements,
   classification,
-  frameCount,
   scanPreviewImage,
-  showDebug,
-  onDebugChange,
   onScanAgain,
 }: ScanResultsScreenProps) {
   const profile = getLashRecommendations(classification.primary);
@@ -134,35 +123,6 @@ export default function ScanResultsScreen({
           <div className="rounded-2xl bg-[#fff8fa]/80 px-4 py-3">
             <PrivacyNotice compact onLight />
           </div>
-
-          <div className="rounded-2xl bg-[#fff8fa]/80 px-4 py-3">
-            <DebugToggle
-              enabled={showDebug}
-              onChange={onDebugChange}
-              onLight
-            />
-          </div>
-
-          {showDebug && (
-            <div className="rounded-2xl border border-[#c41b6a]/20 bg-[#fff8fa] p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-[#5c4a62]">
-                {DEBUG_COPY.panelTitle} ({frameCount} frames)
-              </p>
-              <pre className="mt-3 overflow-x-auto font-mono text-[10px] leading-relaxed text-[#5c4a62]">
-                {formatEyeBlock("Left eye", measurements.left)}
-                {"\n\n"}
-                {formatEyeBlock("Right eye", measurements.right)}
-                {"\n\n"}
-                {Object.entries(classification.scores)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(
-                    ([shape, score]) =>
-                      `  ${formatShapeLabel(shape as EyeShape)}: ${(score * 100).toFixed(0)}%`,
-                  )
-                  .join("\n")}
-              </pre>
-            </div>
-          )}
         </div>
       </div>
     </div>

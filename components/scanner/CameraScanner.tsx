@@ -1,7 +1,6 @@
 "use client";
 
 import { MEDIA_CLASS } from "@/constants/scan";
-import { useDebugMode } from "@/hooks/use-debug-mode";
 import { useScanSession } from "@/hooks/use-scan-session";
 import AlignmentGuideOverlay from "./AlignmentGuideOverlay";
 import ScanActionButton from "./ScanActionButton";
@@ -16,7 +15,6 @@ import ScanSweepEffect from "./ScanSweepEffect";
 import PrivacyNotice from "./PrivacyNotice";
 
 export default function CameraScanner() {
-  const { showDebug, setShowDebug } = useDebugMode();
   const {
     videoRef,
     canvasRef,
@@ -27,7 +25,6 @@ export default function CameraScanner() {
     scanSessionConfidence,
     averagedResults,
     classification,
-    capturedFrameCount,
     scanPreviewImage,
     error,
     showCamera,
@@ -98,12 +95,8 @@ export default function CameraScanner() {
 
       {phase === "results" && averagedResults && classification && (
         <ScanResultsScreen
-          measurements={averagedResults}
           classification={classification}
-          frameCount={capturedFrameCount}
           scanPreviewImage={scanPreviewImage}
-          showDebug={showDebug}
-          onDebugChange={setShowDebug}
           onScanAgain={resetScan}
         />
       )}

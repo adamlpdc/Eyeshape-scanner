@@ -32,15 +32,15 @@ export default function ProductRecommendationCard({
   return (
     <article className="rounded-2xl border border-[#e8c4cc]/80 bg-white p-3">
       <div
-        className="flex aspect-[4/3] items-center justify-center rounded-xl"
-        style={{ backgroundColor: `${EYLURE_BRAND.resultsPink}40` }}
+        className="flex h-44 items-center justify-center overflow-hidden rounded-xl bg-white p-4"
+        style={{ border: `1px solid ${EYLURE_BRAND.resultsPink}30` }}
       >
         {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt={product.name}
-            className="h-full w-full rounded-xl object-cover"
+            className="max-h-full max-w-full object-contain"
             onError={() => setImageFailed(true)}
           />
         ) : (

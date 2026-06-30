@@ -6,7 +6,6 @@ import {
   isPreviewScreenId,
   PREVIEW_CLASSIFICATION,
   PREVIEW_ERROR,
-  PREVIEW_MEASUREMENTS,
   PREVIEW_READINESS_ALIGNING,
   PREVIEW_READINESS_READY,
   type PreviewScreenId,
@@ -135,12 +134,8 @@ export default function ScannerScreenPreview({
 
       {screen === "results" && (
         <ScanResultsScreen
-          measurements={PREVIEW_MEASUREMENTS}
           classification={PREVIEW_CLASSIFICATION}
-          frameCount={42}
           scanPreviewImage="/cat-eye-hero.png"
-          showDebug={false}
-          onDebugChange={() => {}}
           onScanAgain={() => {}}
         />
       )}

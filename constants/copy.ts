@@ -1,5 +1,5 @@
 export const APP_COPY = {
-  name: "Eye shape scanner",
+  name: "Eylure eye shape scanner",
   analysisTitle: "Eye shape analysis",
   tagline: "Discover your perfect lash match",
   startScan: "Start scan",
@@ -16,7 +16,6 @@ export const APP_COPY = {
   scanConfidence: "Scan confidence",
   fetchingResults: "Fetching your results…",
   eyeShapeConfidence: "Shape match",
-  prototypeBadge: "Private prototype",
 } as const;
 
 export function scanStartsAtCopy(minPercent: number): string {
@@ -43,9 +42,4 @@ export const UNLOCK_COPY = {
   termsLabel: "Terms & Conditions",
   privacyUrl: "https://www.pdcwellness.com/privacy-policy/",
   termsUrl: "https://www.eylure.com/pages/terms-and-conditions",
-} as const;
-
-export const DEBUG_COPY = {
-  label: "Show debug measurements",
-  panelTitle: "Debug measurements",
 } as const;
