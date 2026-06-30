@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "screenshots": "node scripts/capture-screenshots.mjs",
+    "catalog:generate": "node scripts/generate-boots-catalog.mjs",
+    "catalog:verify-images": "node scripts/verify-product-images.mjs",
+    "catalog:verify-links": "node scripts/verify-boots-links.mjs",
+    "catalog:sync-images": "node scripts/sync-product-images.mjs",
     "postinstall": "node scripts/copy-mediapipe-wasm.mjs"
   },
   "dependencies": {
