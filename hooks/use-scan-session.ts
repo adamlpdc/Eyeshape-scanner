@@ -241,12 +241,6 @@ export function useScanSession() {
       cancelAnimationFrame(animationId);
       stopSync?.();
 
-      const video = videoRef.current;
-      const landmarks = lastLandmarksRef.current;
-      if (video && landmarks) {
-        setScanPreviewImage(captureEyePreview(video, landmarks));
-      }
-
       stopCamera();
 
       const samples = samplesRef.current;
@@ -352,6 +346,15 @@ export function useScanSession() {
             stableReadyFramesRef.current >=
             SCAN_QUALITY_CONFIG.stableFramesRequired
           ) {
+            if (landmarks) {
+              const preview = captureEyePreview(
+                video,
+                landmarks,
+              );
+              if (preview) {
+                setScanPreviewImage(preview);
+              }
+            }
             startCountdown();
           }
         }
@@ -365,6 +368,7 @@ export function useScanSession() {
           captureStartRef.current = null;
           stableReadyFramesRef.current = 0;
           setCountdown(0);
+          setScanPreviewImage(null);
           setPhase("aligning");
         }
 
