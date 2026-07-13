@@ -9,8 +9,9 @@ import { getLashRecommendations } from "@/lib/recommendations/get-lash-recommend
 import { EYLURE_BRAND } from "@/constants/brand";
 import { formatShapeLabel } from "@/lib/classification/format-shape-label";
 import type { EyeShapeClassification } from "@/types/classification";
+import type { ProductRecommendation } from "@/types/lash-recommendations";
 import ScanEyePreview from "./results/ScanEyePreview";
-import ProductRecommendationCard from "./results/ProductRecommendationCard";
+import ProductRecommendationsSection from "./results/ProductRecommendationsSection";
 import PrivacyNotice from "./PrivacyNotice";
 
 interface ScanResultsScreenProps {
@@ -33,7 +34,7 @@ export default function ScanResultsScreen({
     onScanAgain();
   };
 
-  const handleRecommendationClick = (product: (typeof profile.products)[number]) => {
+  const handleRecommendationClick = (product: ProductRecommendation) => {
     trackRecommendationClicked(product, classification.primary);
   };
 
@@ -93,21 +94,10 @@ export default function ScanResultsScreen({
             </p>
           </article>
 
-          <article className="rounded-2xl bg-[#fff8fa] p-5 shadow-md">
-            <h2 className="text-sm font-bold text-[#2f2435]">
-              {RECOMMENDATION_COPY.recommendedProducts}
-            </h2>
-            <ul className="mt-3 space-y-3">
-              {profile.products.map((product) => (
-                <li key={product.id}>
-                  <ProductRecommendationCard
-                    product={product}
-                    onProductClick={handleRecommendationClick}
-                  />
-                </li>
-              ))}
-            </ul>
-          </article>
+          <ProductRecommendationsSection
+            eyeShape={classification.primary}
+            onProductClick={handleRecommendationClick}
+          />
 
           <div className="rounded-2xl bg-[#fff8fa]/80 px-4 py-3">
             <PrivacyNotice compact onLight />
